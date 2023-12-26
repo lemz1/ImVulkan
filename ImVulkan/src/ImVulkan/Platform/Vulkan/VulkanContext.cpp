@@ -9,13 +9,20 @@ namespace ImVulkan
 	{}
 
 	VulkanContext::~VulkanContext()
-	{}
+	{
+		VK_ASSERT(vkDeviceWaitIdle(m_Device), "Something went wrong when destroying!");
+		vkDestroyDevice(m_Device, nullptr);
+
+		vkDestroyInstance(m_Instance, nullptr);
+	}
 
 	void VulkanContext::Setup(uint32_t extensionCount, const char** extensions)
 	{
 		InitVulkanInstance(extensionCount, extensions);
 
 		SelectPhysicalDevice();
+
+		CreateLogicalDevice();
 	}
 
 	void VulkanContext::InitVulkanInstance(uint32_t extensionCount, const char** extensions)
@@ -87,5 +94,50 @@ namespace ImVulkan
 		IMVK_INFO("Selected GPU: " << m_PhysicalDeviceProperties.deviceName);
 		#endif
 		delete[] physicalDevices;
+	}
+
+	void VulkanContext::CreateLogicalDevice() 
+	{
+		uint32_t numQueueFamilies = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &numQueueFamilies, nullptr);
+		VkQueueFamilyProperties* queueFamilies = new VkQueueFamilyProperties[numQueueFamilies];
+		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &numQueueFamilies, queueFamilies);
+
+		uint32_t graphicsQueueIndex = 0;
+		for (uint32_t i = 0; i < numQueueFamilies; i++)
+		{
+			VkQueueFamilyProperties queueFamily = queueFamilies[i];
+			if (queueFamily.queueCount == 0)
+			{
+				continue;
+			}
+
+			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			{
+				graphicsQueueIndex = i;
+				break;
+			}
+		}
+		delete[] queueFamilies;
+
+		float priorities[] = { 1.f };
+		VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+		queueCreateInfo.queueFamilyIndex = graphicsQueueIndex;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = priorities;
+
+		VkPhysicalDeviceFeatures features = {};
+
+		VkDeviceCreateInfo createInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+		createInfo.queueCreateInfoCount = 1;
+		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		createInfo.enabledExtensionCount = 0;
+		createInfo.ppEnabledExtensionNames = nullptr;
+		createInfo.pEnabledFeatures = &features;
+
+		VK_ASSERT(vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device), "Failed to create logical device!");
+
+		m_GraphicsQueue.queueIndex = graphicsQueueIndex;
+		vkGetDeviceQueue(m_Device, m_GraphicsQueue.queueIndex, 0, &m_GraphicsQueue.queue);
 	}
 }

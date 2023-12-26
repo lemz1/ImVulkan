@@ -22,7 +22,7 @@ namespace ImVulkan
 
 		uint32_t extensionCount = 0;
 		const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
-		
+
 		m_VulkanContext.Setup(extensionCount, extensions);
 
 		glfwMakeContextCurrent(m_WindowHandle);
