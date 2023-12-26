@@ -1,7 +1,11 @@
+include "ImVulkanLibraries.lua" -- libraries
+
 workspace "ImVulkan"
     architecture "x64"
     startproject "ImVulkanApp"
     configurations { "Debug", "Release" }
+
+    defines { "IMVK_PLATFORM_GLFW" }
 
     filter "system:linux"
         defines { "IMVK_PLATFORM_LINUX" }
@@ -12,12 +16,6 @@ workspace "ImVulkan"
     targetdir("%{wks.location}/bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/%{prj.name}")
     objdir("%{wks.location}/bin-int/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/%{prj.name}")
 
-group "Dependencies"
 
-group ""
-
-group "Core"
-    include "ImVulkanCore"
-group ""
-
+include "ImVulkanExternal.lua"
 include "ImVulkanApp"
