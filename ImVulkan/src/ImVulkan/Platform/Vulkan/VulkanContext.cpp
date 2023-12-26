@@ -15,16 +15,17 @@ namespace ImVulkan
 	{
 		InitVulkanInstance(extensionCount, extensions);
 
+		SelectPhysicalDevice();
 	}
 
 	void VulkanContext::InitVulkanInstance(uint32_t extensionCount, const char** extensions)
 	{
 		uint32_t layerPropertyCount;
-		VK_ASSERT(vkEnumerateInstanceLayerProperties(&layerPropertyCount, nullptr), "Vulkan: Error enumerating instance layer properties");
+		VK_ASSERT(vkEnumerateInstanceLayerProperties(&layerPropertyCount, nullptr), "Error enumerating instance layer properties!");
 		VkLayerProperties* layerProperties = new VkLayerProperties[layerPropertyCount];
-		VK_ASSERT(vkEnumerateInstanceLayerProperties(&layerPropertyCount, layerProperties), "Vulkan: Error enumerating instance layer properties");
+		VK_ASSERT(vkEnumerateInstanceLayerProperties(&layerPropertyCount, layerProperties), "Error enumerating instance layer properties!");
 
-		#ifdef VULKAN_DEBUG_INFO
+		#ifdef VK_DEBUG_INFO
 		for (uint32_t i = 0; i < layerPropertyCount; i++)
 		{
 			IMVK_INFO(layerProperties[i].layerName);
@@ -39,10 +40,10 @@ namespace ImVulkan
 		};
 
 		//uint32_t availableInstanceExtensionCount;
-		//VK_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, nullptr));
+		//VK_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, nullptr), Error enumerating extension properties!);
 		//VkExtensionProperties* availableinstanceExtensionProperties = new VkExtensionProperties[availableInstanceExtensionCount];
-		//VK_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, availableinstanceExtensionProperties));
-		//#ifdef VULKAN_DEBUG_INFO
+		//VK_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, availableinstanceExtensionProperties), Error enumerating extension properties!);
+		//#ifdef VK_DEBUG_INFO
 		//for (uint32_t i = 0; i < availableInstanceExtensionCount; i++)
 		//{
 		//	IMVK_INFO(availableinstanceExtensionProperties[i].extensionName);
@@ -60,6 +61,31 @@ namespace ImVulkan
 		createInfo.enabledExtensionCount = extensionCount;
 		createInfo.ppEnabledExtensionNames = extensions;
 
-		VK_ASSERT(vkCreateInstance(&createInfo, nullptr, &m_Instance), "Vulkan: Error creating Vulkan instance!");
+		VK_ASSERT(vkCreateInstance(&createInfo, nullptr, &m_Instance), "Error creating Vulkan instance!");
+	}
+
+	void VulkanContext::SelectPhysicalDevice()
+	{
+		uint32_t numDevices;
+		VK_ASSERT(vkEnumeratePhysicalDevices(m_Instance, &numDevices, nullptr), "Error enumerating physical devices!");
+		IMVK_ASSERT(numDevices == 0, "Vulkan: Failed to find GPUs with Vulkan Support!");
+
+		VkPhysicalDevice* physicalDevices = new VkPhysicalDevice[numDevices];
+		VK_ASSERT(vkEnumeratePhysicalDevices(m_Instance, &numDevices, physicalDevices), "Error enumerating physical devices!");
+		#ifdef VK_DEBUG_INFO
+		IMVK_INFO("Found " << numDevices << " GPU(s):");
+		for (uint32_t i = 0; i < numDevices; i++)
+		{
+			VkPhysicalDeviceProperties properties = {};
+			vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
+			IMVK_INFO("GPU: " << i << ": " << properties.deviceName);
+		}
+		#endif
+		m_PhysicalDevice = physicalDevices[0];
+		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &m_PhysicalDeviceProperties);
+		#ifdef VK_DEBUG_INFO
+		IMVK_INFO("Selected GPU: " << m_PhysicalDeviceProperties.deviceName);
+		#endif
+		delete[] physicalDevices;
 	}
 }
