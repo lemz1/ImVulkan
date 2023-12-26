@@ -20,10 +20,17 @@ namespace ImVulkan
 
 		IMVK_ASSERT(!glfwVulkanSupported(), "GLFW: Vulkan is not supported!");
 
-		uint32_t extensionCount = 0;
-		const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
+		uint32_t instanceExtensionCount = 0;
+		const char** instanceExtensions = glfwGetRequiredInstanceExtensions(&instanceExtensionCount);
 
-		m_VulkanContext.Setup(extensionCount, extensions);
+		const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+		m_VulkanContext.CreateDevice(instanceExtensionCount, instanceExtensions, ARRAY_COUNT(deviceExtensions), deviceExtensions);
+
+		VkSurfaceKHR surface; 
+		glfwCreateWindowSurface(m_VulkanContext.GetInstance(), m_WindowHandle, nullptr, &surface);
+		
+		m_VulkanContext.CreateSwapchain(surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 
 		glfwMakeContextCurrent(m_WindowHandle);
 	}
