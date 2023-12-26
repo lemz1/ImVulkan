@@ -39,9 +39,9 @@ namespace ImVulkan
 		};
 
 		//uint32_t availableInstanceExtensionCount;
-		//vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, nullptr);
+		//VK_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, nullptr));
 		//VkExtensionProperties* availableinstanceExtensionProperties = new VkExtensionProperties[availableInstanceExtensionCount];
-		//vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, availableinstanceExtensionProperties);
+		//VK_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &availableInstanceExtensionCount, availableinstanceExtensionProperties));
 		//#ifdef VULKAN_DEBUG_INFO
 		//for (uint32_t i = 0; i < availableInstanceExtensionCount; i++)
 		//{
@@ -51,7 +51,7 @@ namespace ImVulkan
 		//delete[] availableinstanceExtensionProperties;
 
 		VkApplicationInfo applicationInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
-		applicationInfo.apiVersion = VK_VERSION_1_3;
+		applicationInfo.apiVersion = VK_API_VERSION_1_3;
 
 		VkInstanceCreateInfo createInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 		createInfo.pApplicationInfo = &applicationInfo;
