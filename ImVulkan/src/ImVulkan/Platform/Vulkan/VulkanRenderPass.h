@@ -9,7 +9,7 @@ namespace ImVulkan
 	{
 	public:
 		VulkanRenderPass() = default;
-		VulkanRenderPass(VulkanContext* context, VkFormat format);
+		VulkanRenderPass(VulkanContext& context, VkFormat format);
 
 		VulkanRenderPass(const VulkanRenderPass& other) noexcept = delete; // for now no copying
 
@@ -19,12 +19,10 @@ namespace ImVulkan
 
 		VulkanRenderPass& operator=(VulkanRenderPass&& other) noexcept;
 
-		void Destroy();
+		void Destroy(VulkanContext& context);
 
 		const VkRenderPass& GetRenderPass() const { return m_RenderPass; }
 	private:
 		VkRenderPass m_RenderPass = nullptr;
-
-		VulkanContext* m_Context = nullptr;
 	};
 }

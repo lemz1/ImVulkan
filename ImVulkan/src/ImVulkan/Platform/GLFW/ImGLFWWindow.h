@@ -9,6 +9,7 @@
 #include "ImVulkan/Platform/Vulkan/VulkanContext.h"
 #include "ImVulkan/Platform/Vulkan/VulkanSwapchain.h"
 #include "ImVulkan/Platform/Vulkan/VulkanRenderPass.h"
+#include "ImVulkan/Platform/Vulkan/VulkanPipeline.h"
 
 namespace ImVulkan
 {
@@ -47,5 +48,9 @@ namespace ImVulkan
 		VulkanSwapchain m_Swapchain;
 		VulkanRenderPass m_RenderPass;
 		std::vector<VkFramebuffer> m_FrameBuffers;
+		VulkanPipeline m_VulkanPipeline;
+		VkCommandBuffer m_CommandBuffer;
+		VkCommandPool m_CommandPool;
+		VkFence m_Fence;
 	};
 }

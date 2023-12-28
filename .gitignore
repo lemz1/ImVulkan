@@ -2,6 +2,8 @@ bin
 bin-int
 *imgui.ini
 
+## shaders
+*.spv
 
 ## visual studio
 .vs

@@ -10,7 +10,7 @@ namespace ImVulkan
 	{
 	public:
 		VulkanSwapchain() = default;
-		VulkanSwapchain(VulkanContext* context, VkSurfaceKHR surface, VkImageUsageFlags usage);
+		VulkanSwapchain(VulkanContext& context, VkSurfaceKHR surface, VkImageUsageFlags usage);
 
 		VulkanSwapchain(const VulkanSwapchain& other) noexcept = delete; // for now no copying
 
@@ -20,8 +20,9 @@ namespace ImVulkan
 
 		VulkanSwapchain& operator=(VulkanSwapchain&& other) noexcept;
 
-		void Destroy();
+		void Destroy(VulkanContext& context);
 
+		const VkSwapchainKHR& GetSwapchain() { return m_Swapchain; }
 		const VkFormat GetFormat() const { return m_Format; }
 		const uint32_t GetWidth() const { return m_Width; }
 		const uint32_t GetHeight() const { return m_Height; }
@@ -36,7 +37,5 @@ namespace ImVulkan
 		std::vector<VkImageView> m_ImageViews;
 
 		VkSurfaceKHR m_Surface = nullptr;
-
-		VulkanContext* m_Context = nullptr;
 	};
 }
