@@ -30,14 +30,38 @@ namespace ImVulkan
 		VkSurfaceKHR surface; 
 		glfwCreateWindowSurface(m_VulkanContext.GetInstance(), m_WindowHandle, nullptr, &surface);
 		
-		m_VulkanContext.CreateSwapchain(surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+		m_Swapchain = VulkanSwapchain(&m_VulkanContext, surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+		m_RenderPass = VulkanRenderPass(&m_VulkanContext, m_Swapchain.GetFormat());
+		m_FrameBuffers.resize(m_Swapchain.GetImages().size());
+		for (uint32_t i = 0; i < m_Swapchain.GetImages().size(); i++)
+		{
+			VkFramebufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+			createInfo.renderPass = m_RenderPass.GetRenderPass();
+			createInfo.attachmentCount = 1;
+			createInfo.pAttachments = &m_Swapchain.GetImageViews()[i];
+			createInfo.width = m_Swapchain.GetWidth();
+			createInfo.height = m_Swapchain.GetHeight();
+			createInfo.layers = 1;
+			vkCreateFramebuffer(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_FrameBuffers[i]);
+		}
 
 		glfwMakeContextCurrent(m_WindowHandle);
 	}
 
 	ImGLFWWindow::~ImGLFWWindow()
 	{
+		m_RenderPass.Destroy();
+		m_Swapchain.Destroy();
+
+		for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
+		{
+			vkDestroyFramebuffer(m_VulkanContext.GetDevice(), m_FrameBuffers[i], nullptr);
+		}
+
+		m_VulkanContext.Destroy();
+
 		glfwDestroyWindow(m_WindowHandle);
+		glfwTerminate();
 	}
 
 	void* ImGLFWWindow::GetNativeWindow()

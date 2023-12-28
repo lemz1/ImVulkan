@@ -1,13 +1,7 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include "ImVulkan/Platform/Vulkan/VulkanCore.h"
 #include <vector>
-
-#define VK_ASSERT(value, message) IMVK_ASSERT(value != VK_SUCCESS, "Vulkan: " << message)
-
-#define ARRAY_COUNT(array) (sizeof(array) / sizeof(array[0]))
-
-#define VK_DEBUG_INFO
 
 namespace ImVulkan
 {
@@ -17,32 +11,26 @@ namespace ImVulkan
 		uint32_t queueIndex;
 	};
 
-	struct VulkanSwapchain
-	{
-		VkSwapchainKHR swapchain;
-		uint32_t width, height;
-		VkFormat format;
-		std::vector<VkImage> images;
-	};
-
 	class VulkanContext
 	{
 	public:
-		VulkanContext();
-		~VulkanContext();
+		VulkanContext() = default;
+		void Destroy();
 
-		// --------------- Vulkan Device ----------------------------------------------------
 		void CreateDevice(uint32_t instanceExtensionCount, const char** instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions);
-		// ----------------------------------------------------------------------------------
-
-
-		// ------------- Vulkan Swap Chain --------------------------------------------------
-		void CreateSwapchain(VkSurfaceKHR surface, VkImageUsageFlags usage);
-		// ----------------------------------------------------------------------------------
 		
-		const VkInstance& GetInstance() { return m_Instance; }
+		VkInstance& GetInstance() { return m_Instance; }
+		VkPhysicalDevice& GetPhysicalDevice() { return m_PhysicalDevice; }
+		VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() { return m_PhysicalDeviceProperties; }
+		VkDevice& GetDevice() { return m_Device; }
+		VulkanQueue& GetGraphicsQueue() { return m_GraphicsQueue; }
+
+		const VkInstance& GetInstance() const { return m_Instance; }
+		const VkPhysicalDevice& GetPhysicalDevice() const { return m_PhysicalDevice; }
+		const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return m_PhysicalDeviceProperties; }
+		const VkDevice& GetDevice() const { return m_Device; }
+		const VulkanQueue& GetGraphicsQueue() const { return m_GraphicsQueue; }
 	private:
-		// --------------- Vulkan Device ----------------------------------------------------
 		void InitVulkanInstance(uint32_t instanceExtensionCount, const char** instanceExtensions);
 
 		void SelectPhysicalDevice();
@@ -50,12 +38,6 @@ namespace ImVulkan
 		void CreateLogicalDevice(uint32_t deviceExtensionCount, const char** deviceExtensions);
 
 		void DestroyDevice();
-		// ----------------------------------------------------------------------------------
-
-
-		// ------------- Vulkan Swap Chain --------------------------------------------------
-		void DestroySwapchain();
-		// ----------------------------------------------------------------------------------
 	private:
 		VkInstance m_Instance = nullptr;
 
@@ -63,8 +45,5 @@ namespace ImVulkan
 		VkPhysicalDeviceProperties m_PhysicalDeviceProperties = {};
 		VkDevice m_Device = nullptr;
 		VulkanQueue m_GraphicsQueue = {};
-		
-		VulkanSwapchain m_Swapchain = {};
-		VkSurfaceKHR m_Surface = nullptr;
 	};
 }

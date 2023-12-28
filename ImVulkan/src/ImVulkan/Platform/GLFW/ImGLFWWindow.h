@@ -7,6 +7,8 @@
 #include <GLFW/glfw3.h>
 
 #include "ImVulkan/Platform/Vulkan/VulkanContext.h"
+#include "ImVulkan/Platform/Vulkan/VulkanSwapchain.h"
+#include "ImVulkan/Platform/Vulkan/VulkanRenderPass.h"
 
 namespace ImVulkan
 {
@@ -41,5 +43,9 @@ namespace ImVulkan
 
 		GLFWwindow* m_WindowHandle;
 		VulkanContext m_VulkanContext;
+
+		VulkanSwapchain m_Swapchain;
+		VulkanRenderPass m_RenderPass;
+		std::vector<VkFramebuffer> m_FrameBuffers;
 	};
 }
