@@ -9,7 +9,7 @@ namespace ImVulkan
 	{
 	public:
 		VulkanRenderPass() = default;
-		VulkanRenderPass(VulkanContext& context, VkFormat format);
+		VulkanRenderPass(VkDevice device, VkFormat format);
 
 		VulkanRenderPass(const VulkanRenderPass& other) noexcept = delete; // for now no copying
 
@@ -19,7 +19,7 @@ namespace ImVulkan
 
 		VulkanRenderPass& operator=(VulkanRenderPass&& other) noexcept;
 
-		void Destroy(VulkanContext& context);
+		void Destroy(VkDevice device);
 
 		const VkRenderPass& GetRenderPass() const { return m_RenderPass; }
 	private:

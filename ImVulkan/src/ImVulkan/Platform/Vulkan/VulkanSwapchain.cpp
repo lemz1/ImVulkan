@@ -3,17 +3,16 @@
 
 namespace ImVulkan
 {
-	VulkanSwapchain::VulkanSwapchain(VulkanContext& context, VkSurfaceKHR surface, VkImageUsageFlags usage)
-		: m_Surface(surface)
+	VulkanSwapchain::VulkanSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex,
+									 VkSurfaceKHR surface, VkImageUsageFlags usage, VkSwapchainKHR oldSwapchain)
 	{
 		VkBool32 supportsPresent = 0;
-		VK_ASSERT(vkGetPhysicalDeviceSurfaceSupportKHR(context.GetPhysicalDevice(), context.GetGraphicsQueue().queueFamilyIndex, 
-			m_Surface, &supportsPresent), "Error present not allowed!");
+		VK_ASSERT(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, surface, &supportsPresent), "Error present not allowed!");
 
 		uint32_t numFormats;
-		VK_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(context.GetPhysicalDevice(), m_Surface, &numFormats, nullptr), "No m_Surface formats available!");
+		VK_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &numFormats, nullptr), "No surface formats available!");
 		VkSurfaceFormatKHR* availableFormats = new VkSurfaceFormatKHR[numFormats];
-		VK_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(context.GetPhysicalDevice(), m_Surface, &numFormats, availableFormats), "No m_Surface formats available!");
+		VK_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &numFormats, availableFormats), "No surface formats available!");
 
 		// first format should be a sensible default in most cases
 		VkFormat format = availableFormats[0].format;
@@ -22,7 +21,7 @@ namespace ImVulkan
 		delete[] availableFormats;
 
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		VK_ASSERT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context.GetPhysicalDevice(), m_Surface, &surfaceCapabilities), "No m_Surface capabilites!");
+		VK_ASSERT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities), "No surface capabilites!");
 		if (surfaceCapabilities.currentExtent.width == 0xFFFFFFFF)
 		{
 			surfaceCapabilities.currentExtent.width = surfaceCapabilities.minImageExtent.width;
@@ -39,7 +38,7 @@ namespace ImVulkan
 		}
 
 		VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-		createInfo.surface = m_Surface;
+		createInfo.surface = surface;
 		createInfo.minImageCount = surfaceCapabilities.minImageCount;
 		createInfo.imageFormat = format;
 		createInfo.imageColorSpace = colorSpace;
@@ -50,19 +49,23 @@ namespace ImVulkan
 		createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+		if (oldSwapchain)
+		{
+			createInfo.oldSwapchain = oldSwapchain;
+		}
 
 		m_Format = format;
 		m_Width = surfaceCapabilities.currentExtent.width;
 		m_Height = surfaceCapabilities.currentExtent.height;
 
-		VK_ASSERT(vkCreateSwapchainKHR(context.GetDevice(), &createInfo, nullptr, &m_Swapchain), "failed at creating swapchain");
+		VK_ASSERT(vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_Swapchain), "failed at creating swapchain");
 
 		uint32_t numImages;
-		VK_ASSERT(vkGetSwapchainImagesKHR(context.GetDevice(), m_Swapchain, &numImages, nullptr), "failed at swapchain images!");
+		VK_ASSERT(vkGetSwapchainImagesKHR(device, m_Swapchain, &numImages, nullptr), "failed at swapchain images!");
 
 		m_Images.resize(numImages);
 
-		VK_ASSERT(vkGetSwapchainImagesKHR(context.GetDevice(), m_Swapchain, &numImages, m_Images.data()), "failed at swapchain images!");
+		VK_ASSERT(vkGetSwapchainImagesKHR(device, m_Swapchain, &numImages, m_Images.data()), "failed at swapchain images!");
 
 		m_ImageViews.resize(numImages);
 		for (uint32_t i = 0; i < numImages; i++)
@@ -74,18 +77,17 @@ namespace ImVulkan
 			createInfo.components = {};
 			createInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 
-			VK_ASSERT(vkCreateImageView(context.GetDevice(), &createInfo, nullptr, &m_ImageViews[i]), "Could not create image views");
+			VK_ASSERT(vkCreateImageView(device, &createInfo, nullptr, &m_ImageViews[i]), "Could not create image views");
 		}
 	}
 
 	VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& other) noexcept
 		: m_Format(other.m_Format), m_Height(other.m_Height), 
-		  m_Images(Move(other.m_Images)), m_ImageViews(Move(other.m_ImageViews)), m_Surface(other.m_Surface),
+		  m_Images(Move(other.m_Images)), m_ImageViews(Move(other.m_ImageViews)),
 		  m_Swapchain(other.m_Swapchain), m_Width(other.m_Width)
 	{
 		other.m_Format = VK_FORMAT_UNDEFINED;
 		other.m_Height = 0;
-		other.m_Surface = nullptr;
 		other.m_Swapchain = nullptr;
 		other.m_Width = 0;
 	}
@@ -98,13 +100,11 @@ namespace ImVulkan
 			m_Height = other.m_Height;
 			m_Images = Move(other.m_Images);
 			m_ImageViews = Move(other.m_ImageViews);
-			m_Surface = other.m_Surface;
 			m_Swapchain = other.m_Swapchain;
 			m_Width = other.m_Width;
 
 			other.m_Format = VK_FORMAT_UNDEFINED;
 			other.m_Height = 0;
-			other.m_Surface = nullptr;
 			other.m_Swapchain = nullptr;
 			other.m_Width = 0;
 		}
@@ -112,14 +112,13 @@ namespace ImVulkan
 		return *this;
 	}
 
-	void VulkanSwapchain::Destroy(VulkanContext& context)
+	void VulkanSwapchain::Destroy(VkDevice device)
 	{
 		for (uint32_t i = 0; i < m_ImageViews.size(); i++)
 		{
-			vkDestroyImageView(context.GetDevice(), m_ImageViews[i], nullptr);
+			vkDestroyImageView(device, m_ImageViews[i], nullptr);
 		}
 
-		vkDestroySwapchainKHR(context.GetDevice(), m_Swapchain, nullptr);
-		vkDestroySurfaceKHR(context.GetInstance(), m_Surface, nullptr);
+		vkDestroySwapchainKHR(device, m_Swapchain, nullptr);
 	}
 }

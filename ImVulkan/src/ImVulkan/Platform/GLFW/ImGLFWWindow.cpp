@@ -18,6 +18,21 @@ namespace ImVulkan
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		m_WindowHandle = glfwCreateWindow(spec.width, spec.height, spec.title, nullptr, nullptr);
 
+		glfwSetWindowUserPointer(m_WindowHandle, &m_Minimized);
+
+		glfwSetWindowSizeCallback(m_WindowHandle, [](GLFWwindow* window, int width, int height)
+		{
+			bool& minimized = *(bool*)(glfwGetWindowUserPointer(window));
+			if (width == 0 || height == 0)
+			{
+				minimized = true;
+			}
+			else
+			{
+				minimized = false;
+			}
+		});
+
 		IMVK_ASSERT(!glfwVulkanSupported(), "GLFW: Vulkan is not supported!");
 
 		{
@@ -30,19 +45,23 @@ namespace ImVulkan
 		}
 
 		{
-			VkSurfaceKHR surface;
-			glfwCreateWindowSurface(m_VulkanContext.GetInstance(), m_WindowHandle, nullptr, &surface);
+			glfwCreateWindowSurface(m_VulkanContext.GetInstance(), m_WindowHandle, nullptr, &m_Surface);
 
-			m_Swapchain = VulkanSwapchain(m_VulkanContext, surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+			m_Swapchain = VulkanSwapchain(
+				m_VulkanContext.GetDevice(),
+				m_VulkanContext.GetPhysicalDevice(),
+				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex,
+				m_Surface,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 		}
 
 		{
-			m_RenderPass = VulkanRenderPass(m_VulkanContext, m_Swapchain.GetFormat());
+			m_RenderPass = VulkanRenderPass(m_VulkanContext.GetDevice(), m_Swapchain.GetFormat());
 		}
 
 		{
-			VkShaderModule vertexModule = VulkanPipeline::CreateShaderModule(m_VulkanContext, "assets/shaders/triangle.vert.spv");
-			VkShaderModule fragmentModule = VulkanPipeline::CreateShaderModule(m_VulkanContext, "assets/shaders/triangle.frag.spv");
+			VkShaderModule vertexModule = VulkanPipeline::CreateShaderModule(m_VulkanContext.GetDevice(), "assets/shaders/triangle.vert.spv");
+			VkShaderModule fragmentModule = VulkanPipeline::CreateShaderModule(m_VulkanContext.GetDevice(), "assets/shaders/triangle.frag.spv");
 
 			VkPipelineShaderStageCreateInfo shaderStages[2];
 			shaderStages[0] = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -55,18 +74,17 @@ namespace ImVulkan
 			shaderStages[1].module = fragmentModule;
 			shaderStages[1].pName = "main";
 
-			m_VulkanPipeline = VulkanPipeline(m_VulkanContext, ARRAY_COUNT(shaderStages), shaderStages,
-											  m_RenderPass.GetRenderPass(), m_Swapchain.GetWidth(), m_Swapchain.GetHeight());
+			m_VulkanPipeline = VulkanPipeline(m_VulkanContext.GetDevice(), ARRAY_COUNT(shaderStages), shaderStages, m_RenderPass.GetRenderPass());
 		}
 
 		m_FrameBuffers.resize(m_Swapchain.GetImages().size());
 		for (uint32_t i = 0; i < m_Swapchain.GetImages().size(); i++)
 		{
 			m_FrameBuffers[i] = VulkanFrameBuffer(
-				m_VulkanContext.GetDevice(), 
-				m_RenderPass.GetRenderPass(), 
-				m_Swapchain.GetImageViews()[i], 
-				m_Swapchain.GetWidth(), 
+				m_VulkanContext.GetDevice(),
+				m_RenderPass.GetRenderPass(),
+				m_Swapchain.GetImageViews()[i],
+				m_Swapchain.GetWidth(),
 				m_Swapchain.GetHeight()
 			);
 		}
@@ -83,7 +101,6 @@ namespace ImVulkan
 			m_CommandBuffers[i] = VulkanCommandBuffer(m_VulkanContext.GetDevice(), m_CommandPools[i].GetCommandPool());
 		}
 	}
-
 	ImGLFWWindow::~ImGLFWWindow()
 	{
 		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
@@ -96,14 +113,16 @@ namespace ImVulkan
 			m_Fences[i].Destroy(m_VulkanContext.GetDevice());
 		}
 
-		m_VulkanPipeline.Destroy(m_VulkanContext);
-		m_RenderPass.Destroy(m_VulkanContext);
-		m_Swapchain.Destroy(m_VulkanContext);
+		m_VulkanPipeline.Destroy(m_VulkanContext.GetDevice());
+		m_RenderPass.Destroy(m_VulkanContext.GetDevice());
+		m_Swapchain.Destroy(m_VulkanContext.GetDevice());
+		vkDestroySurfaceKHR(m_VulkanContext.GetInstance(), m_Surface, nullptr);
 
 		for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
 		{
 			m_FrameBuffers[i].Destroy(m_VulkanContext.GetDevice());
 		}
+		m_FrameBuffers.clear();
 
 		m_VulkanContext.Destroy();
 
@@ -169,34 +188,53 @@ namespace ImVulkan
 
 	void ImGLFWWindow::OnUpdate()
 	{
+		if (m_Minimized)
+		{
+			return;
+		}
+
 		static uint32_t frameIndex;
 
 		m_Fences[frameIndex].Wait(m_VulkanContext.GetDevice());
-		m_Fences[frameIndex].Reset(m_VulkanContext.GetDevice());
 
 		uint32_t imageIndex;
-		VK_ASSERT(
-			vkAcquireNextImageKHR(
-				m_VulkanContext.GetDevice(), 
-				m_Swapchain.GetSwapchain(), 
+		{
+			VkResult result = vkAcquireNextImageKHR(
+				m_VulkanContext.GetDevice(),
+				m_Swapchain.GetSwapchain(),
 				UINT64_MAX, m_AcquireSephamores[frameIndex].GetSemaphore(),
-				nullptr, 
-				&imageIndex
-			), 
-			"Could not acquire next image");
+				nullptr,
+				&imageIndex);
+
+			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+			{
+				RecreateSwapchain();
+				return;
+			}
+			else
+			{
+				m_Fences[frameIndex].Reset(m_VulkanContext.GetDevice());
+				VK_ASSERT(result, "Could not acquire next image")
+			}
+		}
 
 		m_CommandPools[frameIndex].Reset(m_VulkanContext.GetDevice());
 
 		{
 			VulkanCommandBuffer& commandBuffer = m_CommandBuffers[frameIndex];
 
-			// CommandBuffer Info
-			{
+			{ // Begin CommandBuffer
 				commandBuffer.BeginCommandBuffer();
 			}
 
-			// Renderpass Info
-			{
+			{ // Window Resize
+				VkViewport viewport = { 0.f, 0.f, (float)m_Swapchain.GetWidth(), (float)m_Swapchain.GetHeight() };
+				VkRect2D scissor = { {0, 0}, {m_Swapchain.GetWidth(), m_Swapchain.GetHeight()} };
+				commandBuffer.SetViewports(0, 1, &viewport);
+				commandBuffer.SetScissors(0, 1, &scissor);
+			}
+
+			{ // Begin RenderPass
 				VkClearValue clearValue = { .1f, .1f, .1f, 1.f };
 				VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 				beginInfo.renderPass = m_RenderPass.GetRenderPass();
@@ -208,27 +246,22 @@ namespace ImVulkan
 				commandBuffer.BeginRenderPass(&beginInfo);
 			}
 
-			// Binding Pipeline
-			{
+			{ // Binding Pipeline
 				commandBuffer.BindPipeline(m_VulkanPipeline.GetVulkanPipeline(), VK_PIPELINE_BIND_POINT_GRAPHICS);
 			}
 
-			// Actual Rendering
-			{
+			{ // Actual Rendering
 				commandBuffer.Draw(3);
 			}
 
-			// End RenderPass
-			{
+			{ // End RenderPass
 				commandBuffer.EndRenderPass();
 			}
 
-			// End CommandBuffer
-			{
+			{ // End CommandBuffer
 				commandBuffer.EndCommandBuffer();
 			}
 		}
-
 
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
@@ -247,9 +280,83 @@ namespace ImVulkan
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_ReleaseSephamores[frameIndex].GetSemaphore();
-		vkQueuePresentKHR(m_VulkanContext.GetGraphicsQueue().queue, &presentInfo);
+		{
+			VkResult result = vkQueuePresentKHR(m_VulkanContext.GetGraphicsQueue().queue, &presentInfo);
+			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+			{
+				// Swapchain out of date
+				RecreateSwapchain();
+			}
+			else
+			{
+				VK_ASSERT(result, "Could not queue present!");
+			}
+		}
 
 		frameIndex = (frameIndex + 1) % FRAMES_IN_FLIGHT;
+	}
+
+	void ImGLFWWindow::RecreateSwapchain()
+	{
+		{ // Minimized Check
+			VkSurfaceCapabilitiesKHR surfaceCapabilites;
+			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanContext.GetPhysicalDevice(), m_Surface, &surfaceCapabilites);
+			if (surfaceCapabilites.currentExtent.width == 0 || surfaceCapabilites.currentExtent.height == 0)
+			{
+				return;
+			}
+		}
+
+		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Could not wait for device idle!");
+
+		{
+			VkSwapchainKHR oldSwapchain = m_Swapchain.GetSwapchain();
+			std::vector<VkImageView> oldImageVies = m_Swapchain.GetImageViews();
+
+			m_Swapchain = VulkanSwapchain(
+				m_VulkanContext.GetDevice(),
+				m_VulkanContext.GetPhysicalDevice(),
+				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex,
+				m_Surface,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+				oldSwapchain);
+
+			{ // this is just the destroy function of VulkanSwapchain
+				for (uint32_t i = 0; i < oldImageVies.size(); i++)
+				{
+					vkDestroyImageView(m_VulkanContext.GetDevice(), oldImageVies[i], nullptr);
+				}
+				vkDestroySwapchainKHR(m_VulkanContext.GetDevice(), oldSwapchain, nullptr);
+			}
+		}
+
+		{
+			m_RenderPass.Destroy(m_VulkanContext.GetDevice());
+
+			m_RenderPass = VulkanRenderPass(m_VulkanContext.GetDevice(), m_Swapchain.GetFormat());
+		}
+
+		
+
+		{
+			for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
+			{
+				m_FrameBuffers[i].Destroy(m_VulkanContext.GetDevice());
+			}
+			m_FrameBuffers.clear();
+
+			m_FrameBuffers.resize(m_Swapchain.GetImages().size());
+			for (uint32_t i = 0; i < m_Swapchain.GetImages().size(); i++)
+			{
+				m_FrameBuffers[i] = VulkanFrameBuffer(
+					m_VulkanContext.GetDevice(),
+					m_RenderPass.GetRenderPass(),
+					m_Swapchain.GetImageViews()[i],
+					m_Swapchain.GetWidth(),
+					m_Swapchain.GetHeight()
+				);
+			}
+		}
 	}
 
 	void ImGLFWWindow::ErrorCallback(int error, const char* description)

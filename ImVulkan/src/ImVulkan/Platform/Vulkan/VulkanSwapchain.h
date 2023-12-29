@@ -10,7 +10,8 @@ namespace ImVulkan
 	{
 	public:
 		VulkanSwapchain() = default;
-		VulkanSwapchain(VulkanContext& context, VkSurfaceKHR surface, VkImageUsageFlags usage);
+		VulkanSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex,
+						VkSurfaceKHR surface, VkImageUsageFlags usage, VkSwapchainKHR oldSwapchain = nullptr);
 
 		VulkanSwapchain(const VulkanSwapchain& other) noexcept = delete; // for now no copying
 
@@ -20,7 +21,7 @@ namespace ImVulkan
 
 		VulkanSwapchain& operator=(VulkanSwapchain&& other) noexcept;
 
-		void Destroy(VulkanContext& context);
+		void Destroy(VkDevice device);
 
 		const VkSwapchainKHR& GetSwapchain() { return m_Swapchain; }
 		const VkFormat GetFormat() const { return m_Format; }
@@ -28,14 +29,11 @@ namespace ImVulkan
 		const uint32_t GetHeight() const { return m_Height; }
 		const std::vector<VkImage>& GetImages() { return m_Images; }
 		const std::vector<VkImageView>& GetImageViews() { return m_ImageViews; }
-		const VkSurfaceKHR& GetSurface() { return m_Surface; }
 	private:
 		VkSwapchainKHR m_Swapchain = nullptr;
 		uint32_t m_Width = 0, m_Height = 0;
 		VkFormat m_Format = VK_FORMAT_UNDEFINED;
 		std::vector<VkImage> m_Images;
 		std::vector<VkImageView> m_ImageViews;
-
-		VkSurfaceKHR m_Surface = nullptr;
 	};
 }

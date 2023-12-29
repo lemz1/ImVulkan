@@ -45,6 +45,8 @@ namespace ImVulkan
 
 		void OnUpdate() override;
 	private:
+		void RecreateSwapchain();
+	private:
 		static void ErrorCallback(int error, const char* description);
 	private:
 		WindowSpecification m_Spec;
@@ -52,6 +54,7 @@ namespace ImVulkan
 		GLFWwindow* m_WindowHandle;
 		VulkanContext m_VulkanContext;
 
+		VkSurfaceKHR m_Surface;
 		VulkanSwapchain m_Swapchain;
 		VulkanRenderPass m_RenderPass;
 		std::vector<VulkanFrameBuffer> m_FrameBuffers;
@@ -61,5 +64,7 @@ namespace ImVulkan
 		VulkanFence m_Fences[FRAMES_IN_FLIGHT];
 		VulkanSemaphore m_AcquireSephamores[FRAMES_IN_FLIGHT];
 		VulkanSemaphore m_ReleaseSephamores[FRAMES_IN_FLIGHT];
+
+		bool m_Minimized = false;
 	};
 }

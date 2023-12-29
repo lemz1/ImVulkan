@@ -4,8 +4,7 @@
 
 namespace ImVulkan
 {
-	VulkanPipeline::VulkanPipeline(VulkanContext& context, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages,
-								   VkRenderPass renderPass, uint32_t width, uint32_t height)
+	VulkanPipeline::VulkanPipeline(VkDevice device, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass)
 	{
 		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 
@@ -14,11 +13,7 @@ namespace ImVulkan
 
 		VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 		viewportState.viewportCount = 1;
-		VkViewport viewport = { 0.f, 0.f, (float)width, (float)height };
-		viewportState.pViewports = &viewport;
 		viewportState.scissorCount = 1;
-		VkRect2D scissor = { {0, 0}, {width, height} };
-		viewportState.pScissors = &scissor;
 
 		VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
 		rasterizationState.lineWidth = 1.f;
@@ -34,9 +29,14 @@ namespace ImVulkan
 		colorBlendState.attachmentCount = 1;
 		colorBlendState.pAttachments = &colorBlendAttachment;
 
+		VkPipelineDynamicStateCreateInfo dynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+		VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+		dynamicState.dynamicStateCount = ARRAY_COUNT(dynamicStates);
+		dynamicState.pDynamicStates = dynamicStates;
+
 		{
 			VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-			VK_ASSERT(vkCreatePipelineLayout(context.GetDevice(), &createInfo, nullptr, &m_PipelineLayout), "Could not create pipeline layout!");
+			VK_ASSERT(vkCreatePipelineLayout(device, &createInfo, nullptr, &m_PipelineLayout), "Could not create pipeline layout!");
 		}
 
 		{
@@ -49,16 +49,17 @@ namespace ImVulkan
 			createInfo.pRasterizationState = &rasterizationState;
 			createInfo.pMultisampleState = &multisampleState;
 			createInfo.pColorBlendState = &colorBlendState;
+			createInfo.pDynamicState = &dynamicState;
 			createInfo.layout = m_PipelineLayout;
 			createInfo.renderPass = renderPass;
 			createInfo.subpass = 0;
 
-			VK_ASSERT(vkCreateGraphicsPipelines(context.GetDevice(), nullptr, 1, &createInfo, nullptr, &m_Pipeline), "Could not create graphics pipeline!");
+			VK_ASSERT(vkCreateGraphicsPipelines(device, nullptr, 1, &createInfo, nullptr, &m_Pipeline), "Could not create graphics pipeline!");
 		}
 
 		for (uint32_t i = 0; i < shaderStageCount; i++)
 		{
-			vkDestroyShaderModule(context.GetDevice(), shaderStages[i].module, nullptr);
+			vkDestroyShaderModule(device, shaderStages[i].module, nullptr);
 		}
 	}
 
@@ -83,13 +84,13 @@ namespace ImVulkan
 		return *this;
 	}
 
-	void VulkanPipeline::Destroy(VulkanContext& context)
+	void VulkanPipeline::Destroy(VkDevice device)
 	{
-		vkDestroyPipeline(context.GetDevice(), m_Pipeline, nullptr);
-		vkDestroyPipelineLayout(context.GetDevice(), m_PipelineLayout, nullptr);
+		vkDestroyPipeline(device, m_Pipeline, nullptr);
+		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 	}
 
-	VkShaderModule VulkanPipeline::CreateShaderModule(VulkanContext& context, const char* shaderFilePath)
+	VkShaderModule VulkanPipeline::CreateShaderModule(VkDevice device, const char* shaderFilePath)
 	{
 		VkShaderModule shaderModule = {};
 
@@ -98,8 +99,8 @@ namespace ImVulkan
 		VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 		createInfo.codeSize = shaderCode.size();
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
-		VK_ASSERT(vkCreateShaderModule(context.GetDevice(), &createInfo, nullptr, &shaderModule), "Could not create shader module!");
-
+		VK_ASSERT(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule), "Could not create shader module!");
+		
 		return shaderModule;
 	}
 }

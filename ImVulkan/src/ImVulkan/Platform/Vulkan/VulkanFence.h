@@ -20,9 +20,9 @@ namespace ImVulkan
 
 		void Destroy(VkDevice device);
 
-		void Wait(VkDevice device);
+		void Wait(VkDevice device) const;
 
-		void Reset(VkDevice device);
+		void Reset(VkDevice device) const;
 
 		const VkFence& GetFence() { return m_Fence; }
 	private:

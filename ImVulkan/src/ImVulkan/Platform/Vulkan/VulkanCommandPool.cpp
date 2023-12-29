@@ -29,12 +29,12 @@ namespace ImVulkan
 		return *this;
 	}
 
-	void VulkanCommandPool::Destroy(VkDevice device)
+	void VulkanCommandPool::Destroy(VkDevice device) const
 	{
 		vkDestroyCommandPool(device, m_CommandPool, nullptr);
 	}
 
-	void VulkanCommandPool::Reset(VkDevice device)
+	void VulkanCommandPool::Reset(VkDevice device) const
 	{
 		VK_ASSERT(vkResetCommandPool(device, m_CommandPool, 0), "Could not reset command pool!");
 	}

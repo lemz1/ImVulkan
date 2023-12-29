@@ -18,9 +18,9 @@ namespace ImVulkan
 
 		VulkanCommandPool& operator=(VulkanCommandPool&& other) noexcept;
 
-		void Destroy(VkDevice device);
+		void Destroy(VkDevice device) const;
 
-		void Reset(VkDevice device);
+		void Reset(VkDevice device) const;
 
 		const VkCommandPool& GetCommandPool() { return m_CommandPool; }
 	private:

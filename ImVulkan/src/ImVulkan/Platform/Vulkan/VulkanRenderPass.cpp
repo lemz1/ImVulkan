@@ -3,7 +3,7 @@
 
 namespace ImVulkan
 {
-	VulkanRenderPass::VulkanRenderPass(VulkanContext& context, VkFormat format)
+	VulkanRenderPass::VulkanRenderPass(VkDevice device, VkFormat format)
 	{
 		VkAttachmentDescription attachmentDescription = {};
 		attachmentDescription.format = format;
@@ -26,7 +26,7 @@ namespace ImVulkan
 		createInfo.subpassCount = 1;
 		createInfo.pSubpasses = &subpass;
 
-		VK_ASSERT(vkCreateRenderPass(context.GetDevice(), &createInfo, nullptr, &m_RenderPass), "Could not create render pass");
+		VK_ASSERT(vkCreateRenderPass(device, &createInfo, nullptr, &m_RenderPass), "Could not create render pass");
 	}
 
 	VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& other) noexcept
@@ -47,8 +47,8 @@ namespace ImVulkan
 		return *this;
 	}
 
-	void VulkanRenderPass::Destroy(VulkanContext& context)
+	void VulkanRenderPass::Destroy(VkDevice device)
 	{
-		vkDestroyRenderPass(context.GetDevice(), m_RenderPass, nullptr);
+		vkDestroyRenderPass(device, m_RenderPass, nullptr);
 	}
 }

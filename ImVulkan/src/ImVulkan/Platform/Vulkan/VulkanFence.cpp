@@ -33,12 +33,12 @@ namespace ImVulkan
 		vkDestroyFence(device, m_Fence, nullptr);
 	}
 
-	void VulkanFence::Wait(VkDevice device)
+	void VulkanFence::Wait(VkDevice device) const
 	{
 		VK_ASSERT(vkWaitForFences(device, 1, &m_Fence, VK_TRUE, UINT64_MAX), "Could not wait for fence!");
 	}
 
-	void VulkanFence::Reset(VkDevice device)
+	void VulkanFence::Reset(VkDevice device) const
 	{
 		VK_ASSERT(vkResetFences(device, 1, &m_Fence), "Could not reset fence!");
 	}

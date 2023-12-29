@@ -18,15 +18,18 @@ namespace ImVulkan
 
 		VulkanCommandBuffer& operator=(VulkanCommandBuffer&& other) noexcept;
 
-		void BeginCommandBuffer();
-		void EndCommandBuffer();
+		void BeginCommandBuffer() const;
+		void EndCommandBuffer() const;
 
-		void BeginRenderPass(VkRenderPassBeginInfo* beginInfo);
-		void EndRenderPass();
+		void BeginRenderPass(VkRenderPassBeginInfo* beginInfo) const;
+		void EndRenderPass() const;
 
-		void BindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint);
+		void BindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint) const;
 
-		void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0);
+		void SetViewports(uint32_t firstViewport, uint32_t viewportCount, VkViewport* viewports);
+		void SetScissors(uint32_t firstScissor, uint32_t scissorCount, VkRect2D* scissors);
+
+		void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0) const;
 
 		const VkCommandBuffer& GetCommandBuffer() { return m_CommandBuffer; }
 	private:
