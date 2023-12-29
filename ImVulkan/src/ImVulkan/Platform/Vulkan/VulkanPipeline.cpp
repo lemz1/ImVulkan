@@ -4,22 +4,9 @@
 
 namespace ImVulkan
 {
-	VulkanPipeline::VulkanPipeline(VulkanContext& context, const char* vertexFilePath, const char* fragmentFilePath, VkRenderPass renderPass, uint32_t width, uint32_t height)
+	VulkanPipeline::VulkanPipeline(VulkanContext& context, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages,
+								   VkRenderPass renderPass, uint32_t width, uint32_t height)
 	{
-		VkShaderModule vertexModule = CreateShaderModule(context, vertexFilePath);
-		VkShaderModule fragmentModule = CreateShaderModule(context, fragmentFilePath);
-
-		VkPipelineShaderStageCreateInfo shaderStages[2];
-		shaderStages[0] = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
-		shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-		shaderStages[0].module = vertexModule;
-		shaderStages[0].pName = "main";
-
-		shaderStages[1] = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
-		shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		shaderStages[1].module = fragmentModule;
-		shaderStages[1].pName = "main";
-
 		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -54,7 +41,7 @@ namespace ImVulkan
 
 		{
 			VkGraphicsPipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-			createInfo.stageCount = ARRAY_COUNT(shaderStages);
+			createInfo.stageCount = shaderStageCount;
 			createInfo.pStages = shaderStages;
 			createInfo.pVertexInputState = &vertexInputState;
 			createInfo.pInputAssemblyState = &inputAssemblyState;
@@ -69,8 +56,10 @@ namespace ImVulkan
 			VK_ASSERT(vkCreateGraphicsPipelines(context.GetDevice(), nullptr, 1, &createInfo, nullptr, &m_Pipeline), "Could not create graphics pipeline!");
 		}
 
-		vkDestroyShaderModule(context.GetDevice(), vertexModule, nullptr);
-		vkDestroyShaderModule(context.GetDevice(), fragmentModule, nullptr);
+		for (uint32_t i = 0; i < shaderStageCount; i++)
+		{
+			vkDestroyShaderModule(context.GetDevice(), shaderStages[i].module, nullptr);
+		}
 	}
 
 	VulkanPipeline::VulkanPipeline(VulkanPipeline&& other) noexcept

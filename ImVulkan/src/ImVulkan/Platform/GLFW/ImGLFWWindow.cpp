@@ -20,60 +20,67 @@ namespace ImVulkan
 
 		IMVK_ASSERT(!glfwVulkanSupported(), "GLFW: Vulkan is not supported!");
 
-		uint32_t instanceExtensionCount = 0;
-		const char** instanceExtensions = glfwGetRequiredInstanceExtensions(&instanceExtensionCount);
+		{
+			uint32_t instanceExtensionCount = 0;
+			const char** instanceExtensions = glfwGetRequiredInstanceExtensions(&instanceExtensionCount);
 
-		const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+			const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-		m_VulkanContext.CreateDevice(instanceExtensionCount, instanceExtensions, ARRAY_COUNT(deviceExtensions), deviceExtensions);
+			m_VulkanContext.CreateDevice(instanceExtensionCount, instanceExtensions, ARRAY_COUNT(deviceExtensions), deviceExtensions);
+		}
 
-		VkSurfaceKHR surface; 
-		glfwCreateWindowSurface(m_VulkanContext.GetInstance(), m_WindowHandle, nullptr, &surface);
-		
-		m_Swapchain = VulkanSwapchain(m_VulkanContext, surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
-		m_RenderPass = VulkanRenderPass(m_VulkanContext, m_Swapchain.GetFormat());
-		m_VulkanPipeline = VulkanPipeline(m_VulkanContext, "assets/shaders/triangle.vert.spv", "assets/shaders/triangle.frag.spv",
-										  m_RenderPass.GetRenderPass(), m_Swapchain.GetWidth(), m_Swapchain.GetHeight());
+		{
+			VkSurfaceKHR surface;
+			glfwCreateWindowSurface(m_VulkanContext.GetInstance(), m_WindowHandle, nullptr, &surface);
+
+			m_Swapchain = VulkanSwapchain(m_VulkanContext, surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+		}
+
+		{
+			m_RenderPass = VulkanRenderPass(m_VulkanContext, m_Swapchain.GetFormat());
+		}
+
+		{
+			VkShaderModule vertexModule = VulkanPipeline::CreateShaderModule(m_VulkanContext, "assets/shaders/triangle.vert.spv");
+			VkShaderModule fragmentModule = VulkanPipeline::CreateShaderModule(m_VulkanContext, "assets/shaders/triangle.frag.spv");
+
+			VkPipelineShaderStageCreateInfo shaderStages[2];
+			shaderStages[0] = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+			shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+			shaderStages[0].module = vertexModule;
+			shaderStages[0].pName = "main";
+
+			shaderStages[1] = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+			shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			shaderStages[1].module = fragmentModule;
+			shaderStages[1].pName = "main";
+
+			m_VulkanPipeline = VulkanPipeline(m_VulkanContext, ARRAY_COUNT(shaderStages), shaderStages,
+											  m_RenderPass.GetRenderPass(), m_Swapchain.GetWidth(), m_Swapchain.GetHeight());
+		}
 
 		m_FrameBuffers.resize(m_Swapchain.GetImages().size());
 		for (uint32_t i = 0; i < m_Swapchain.GetImages().size(); i++)
 		{
-			VkFramebufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-			createInfo.renderPass = m_RenderPass.GetRenderPass();
-			createInfo.attachmentCount = 1;
-			createInfo.pAttachments = &m_Swapchain.GetImageViews()[i];
-			createInfo.width = m_Swapchain.GetWidth();
-			createInfo.height = m_Swapchain.GetHeight();
-			createInfo.layers = 1;
-			vkCreateFramebuffer(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_FrameBuffers[i]);
+			m_FrameBuffers[i] = VulkanFrameBuffer(
+				m_VulkanContext.GetDevice(), 
+				m_RenderPass.GetRenderPass(), 
+				m_Swapchain.GetImageViews()[i], 
+				m_Swapchain.GetWidth(), 
+				m_Swapchain.GetHeight()
+			);
 		}
 
+		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
 		{
-			VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-			createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			VK_ASSERT(vkCreateFence(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_Fence), "Could not create fence!");
-		}
+			m_Fences[i] = VulkanFence(m_VulkanContext.GetDevice());
 
-		{
-			VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-			VK_ASSERT(vkCreateSemaphore(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_AcquireSephamore), "Could not create acquire semaphore!");
-			VK_ASSERT(vkCreateSemaphore(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_ReleaseSephamore), "Could not create release semaphore!");
-		}
+			m_AcquireSephamores[i] = VulkanSemaphore(m_VulkanContext.GetDevice());
+			m_ReleaseSephamores[i] = VulkanSemaphore(m_VulkanContext.GetDevice());
 
-		{
-			VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-			createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-			createInfo.queueFamilyIndex = m_VulkanContext.GetGraphicsQueue().queueIndex;
-			VK_ASSERT(vkCreateCommandPool(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_CommandPool), "Could not create command pool!");
-		}
+			m_CommandPools[i] = VulkanCommandPool(m_VulkanContext.GetDevice(), m_VulkanContext.GetGraphicsQueue().queueFamilyIndex);
 
-		{
-			VkCommandBufferAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-			allocateInfo.commandPool = m_CommandPool;
-			allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			allocateInfo.commandBufferCount = 1;
-
-			VK_ASSERT(vkAllocateCommandBuffers(m_VulkanContext.GetDevice(), &allocateInfo, &m_CommandBuffer), "Could not allocate command buffer!");
+			m_CommandBuffers[i] = VulkanCommandBuffer(m_VulkanContext.GetDevice(), m_CommandPools[i].GetCommandPool());
 		}
 	}
 
@@ -81,10 +88,13 @@ namespace ImVulkan
 	{
 		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
 
-		vkDestroySemaphore(m_VulkanContext.GetDevice(), m_AcquireSephamore, nullptr);
-		vkDestroySemaphore(m_VulkanContext.GetDevice(), m_ReleaseSephamore, nullptr);
-		vkDestroyFence(m_VulkanContext.GetDevice(), m_Fence, nullptr);
-		vkDestroyCommandPool(m_VulkanContext.GetDevice(), m_CommandPool, nullptr);
+		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
+		{
+			m_AcquireSephamores[i].Destroy(m_VulkanContext.GetDevice());
+			m_ReleaseSephamores[i].Destroy(m_VulkanContext.GetDevice());
+			m_CommandPools[i].Destroy(m_VulkanContext.GetDevice());
+			m_Fences[i].Destroy(m_VulkanContext.GetDevice());
+		}
 
 		m_VulkanPipeline.Destroy(m_VulkanContext);
 		m_RenderPass.Destroy(m_VulkanContext);
@@ -92,7 +102,7 @@ namespace ImVulkan
 
 		for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
 		{
-			vkDestroyFramebuffer(m_VulkanContext.GetDevice(), m_FrameBuffers[i], nullptr);
+			m_FrameBuffers[i].Destroy(m_VulkanContext.GetDevice());
 		}
 
 		m_VulkanContext.Destroy();
@@ -159,52 +169,87 @@ namespace ImVulkan
 
 	void ImGLFWWindow::OnUpdate()
 	{
+		static uint32_t frameIndex;
+
+		m_Fences[frameIndex].Wait(m_VulkanContext.GetDevice());
+		m_Fences[frameIndex].Reset(m_VulkanContext.GetDevice());
+
 		uint32_t imageIndex;
-		VK_ASSERT(vkAcquireNextImageKHR(m_VulkanContext.GetDevice(), m_Swapchain.GetSwapchain(), UINT64_MAX, m_AcquireSephamore, nullptr, &imageIndex), "Could not acquire next image");
+		VK_ASSERT(
+			vkAcquireNextImageKHR(
+				m_VulkanContext.GetDevice(), 
+				m_Swapchain.GetSwapchain(), 
+				UINT64_MAX, m_AcquireSephamores[frameIndex].GetSemaphore(),
+				nullptr, 
+				&imageIndex
+			), 
+			"Could not acquire next image");
 
-		VK_ASSERT(vkWaitForFences(m_VulkanContext.GetDevice(), 1, &m_Fence, VK_TRUE, UINT64_MAX), "Could not wait for fences!");
-		VK_ASSERT(vkResetFences(m_VulkanContext.GetDevice(), 1, &m_Fence), "Could not reset fences!");
-		VK_ASSERT(vkResetCommandPool(m_VulkanContext.GetDevice(), m_CommandPool, 0), "Could not reset command pool!");
+		m_CommandPools[frameIndex].Reset(m_VulkanContext.GetDevice());
 
-		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		VK_ASSERT(vkBeginCommandBuffer(m_CommandBuffer, &beginInfo), "Could not begin command buffer!");
 		{
-			VkClearValue clearValue = {.1f, .1f, .1f, 1.f};
+			VulkanCommandBuffer& commandBuffer = m_CommandBuffers[frameIndex];
 
-			VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-			beginInfo.renderPass = m_RenderPass.GetRenderPass();
-			beginInfo.framebuffer = m_FrameBuffers[imageIndex];
-			beginInfo.renderArea = { {0, 0}, {m_Swapchain.GetWidth(), m_Swapchain.GetHeight()} };
-			beginInfo.clearValueCount = 1;
-			beginInfo.pClearValues = &clearValue;
-			vkCmdBeginRenderPass(m_CommandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			// CommandBuffer Info
+			{
+				commandBuffer.BeginCommandBuffer();
+			}
 
-			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VulkanPipeline.GetVulkanPipeline());
-			vkCmdDraw(m_CommandBuffer, 3, 1, 0, 0);
+			// Renderpass Info
+			{
+				VkClearValue clearValue = { .1f, .1f, .1f, 1.f };
+				VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+				beginInfo.renderPass = m_RenderPass.GetRenderPass();
+				beginInfo.framebuffer = m_FrameBuffers[imageIndex].GetFrameBuffer();
+				beginInfo.renderArea = { {0, 0}, {m_Swapchain.GetWidth(), m_Swapchain.GetHeight()} };
+				beginInfo.clearValueCount = 1;
+				beginInfo.pClearValues = &clearValue;
 
-			vkCmdEndRenderPass(m_CommandBuffer);
+				commandBuffer.BeginRenderPass(&beginInfo);
+			}
+
+			// Binding Pipeline
+			{
+				commandBuffer.BindPipeline(m_VulkanPipeline.GetVulkanPipeline(), VK_PIPELINE_BIND_POINT_GRAPHICS);
+			}
+
+			// Actual Rendering
+			{
+				commandBuffer.Draw(3);
+			}
+
+			// End RenderPass
+			{
+				commandBuffer.EndRenderPass();
+			}
+
+			// End CommandBuffer
+			{
+				commandBuffer.EndCommandBuffer();
+			}
 		}
-		VK_ASSERT(vkEndCommandBuffer(m_CommandBuffer), "Could not end command buffer!");
+
 
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffer;
+		submitInfo.pCommandBuffers = &m_CommandBuffers[frameIndex].GetCommandBuffer();
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_AcquireSephamore;
+		submitInfo.pWaitSemaphores = &m_AcquireSephamores[frameIndex].GetSemaphore();
 		VkPipelineStageFlags waitMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		submitInfo.pWaitDstStageMask = &waitMask;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_ReleaseSephamore;
-		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetGraphicsQueue().queue, 1, &submitInfo, m_Fence), "Could not submit queue");
+		submitInfo.pSignalSemaphores = &m_ReleaseSephamores[frameIndex].GetSemaphore();
+		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetGraphicsQueue().queue, 1, &submitInfo, m_Fences[frameIndex].GetFence()), "Could not submit queue");
 
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_Swapchain.GetSwapchain();
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_ReleaseSephamore;
+		presentInfo.pWaitSemaphores = &m_ReleaseSephamores[frameIndex].GetSemaphore();
 		vkQueuePresentKHR(m_VulkanContext.GetGraphicsQueue().queue, &presentInfo);
+
+		frameIndex = (frameIndex + 1) % FRAMES_IN_FLIGHT;
 	}
 
 	void ImGLFWWindow::ErrorCallback(int error, const char* description)

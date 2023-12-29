@@ -10,6 +10,13 @@
 #include "ImVulkan/Platform/Vulkan/VulkanSwapchain.h"
 #include "ImVulkan/Platform/Vulkan/VulkanRenderPass.h"
 #include "ImVulkan/Platform/Vulkan/VulkanPipeline.h"
+#include "ImVulkan/Platform/Vulkan/VulkanFrameBuffer.h"
+#include "ImVulkan/Platform/Vulkan/VulkanSemaphore.h"
+#include "ImVulkan/Platform/Vulkan/VulkanFence.h"
+#include "ImVulkan/Platform/Vulkan/VulkanCommandPool.h"
+#include "ImVulkan/Platform/Vulkan/VulkanCommandBuffer.h"
+
+#define FRAMES_IN_FLIGHT 2
 
 namespace ImVulkan
 {
@@ -47,12 +54,12 @@ namespace ImVulkan
 
 		VulkanSwapchain m_Swapchain;
 		VulkanRenderPass m_RenderPass;
-		std::vector<VkFramebuffer> m_FrameBuffers;
+		std::vector<VulkanFrameBuffer> m_FrameBuffers;
 		VulkanPipeline m_VulkanPipeline;
-		VkCommandBuffer m_CommandBuffer;
-		VkCommandPool m_CommandPool;
-		VkFence m_Fence;
-		VkSemaphore m_AcquireSephamore;
-		VkSemaphore m_ReleaseSephamore;
+		VulkanCommandBuffer m_CommandBuffers[FRAMES_IN_FLIGHT];
+		VulkanCommandPool m_CommandPools[FRAMES_IN_FLIGHT];
+		VulkanFence m_Fences[FRAMES_IN_FLIGHT];
+		VulkanSemaphore m_AcquireSephamores[FRAMES_IN_FLIGHT];
+		VulkanSemaphore m_ReleaseSephamores[FRAMES_IN_FLIGHT];
 	};
 }

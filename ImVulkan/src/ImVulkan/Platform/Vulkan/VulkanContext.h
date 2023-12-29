@@ -8,7 +8,7 @@ namespace ImVulkan
 	struct VulkanQueue
 	{
 		VkQueue queue;
-		uint32_t queueIndex;
+		uint32_t queueFamilyIndex;
 	};
 
 	class VulkanContext

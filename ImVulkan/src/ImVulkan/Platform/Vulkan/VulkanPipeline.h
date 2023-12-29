@@ -9,7 +9,7 @@ namespace ImVulkan
 	{
 	public:
 		VulkanPipeline() = default;
-		VulkanPipeline(VulkanContext& context, const char* vertexFilePath, const char* fragmentFilePath, VkRenderPass renderPass, uint32_t width, uint32_t height);
+		VulkanPipeline(VulkanContext& context, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass, uint32_t width, uint32_t height);
 
 		VulkanPipeline(const VulkanPipeline& other) noexcept = delete; // for now no copying
 
@@ -23,7 +23,7 @@ namespace ImVulkan
 
 		const VkPipeline GetVulkanPipeline() { return m_Pipeline; }
 		const VkPipelineLayout GetVulkanPipelineLayout() { return m_PipelineLayout; }
-	private:
+	public:
 		static VkShaderModule CreateShaderModule(VulkanContext& context, const char* shaderFilePath);
 	private:
 		VkPipeline m_Pipeline;

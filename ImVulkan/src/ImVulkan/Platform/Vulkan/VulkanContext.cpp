@@ -131,8 +131,8 @@ namespace ImVulkan
 
 		VK_ASSERT(vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device), "Failed to create logical device!");
 
-		m_GraphicsQueue.queueIndex = graphicsQueueIndex;
-		vkGetDeviceQueue(m_Device, m_GraphicsQueue.queueIndex, 0, &m_GraphicsQueue.queue);
+		m_GraphicsQueue.queueFamilyIndex = graphicsQueueIndex;
+		vkGetDeviceQueue(m_Device, m_GraphicsQueue.queueFamilyIndex, 0, &m_GraphicsQueue.queue);
 	}
 	
 	void VulkanContext::DestroyDevice()

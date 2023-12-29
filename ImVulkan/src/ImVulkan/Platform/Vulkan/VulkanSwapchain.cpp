@@ -7,7 +7,7 @@ namespace ImVulkan
 		: m_Surface(surface)
 	{
 		VkBool32 supportsPresent = 0;
-		VK_ASSERT(vkGetPhysicalDeviceSurfaceSupportKHR(context.GetPhysicalDevice(), context.GetGraphicsQueue().queueIndex, 
+		VK_ASSERT(vkGetPhysicalDeviceSurfaceSupportKHR(context.GetPhysicalDevice(), context.GetGraphicsQueue().queueFamilyIndex, 
 			m_Surface, &supportsPresent), "Error present not allowed!");
 
 		uint32_t numFormats;
