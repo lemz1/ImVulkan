@@ -114,8 +114,6 @@ namespace ImVulkan
 
 	void VulkanSwapchain::Destroy(VulkanContext& context)
 	{
-		VK_ASSERT(vkDeviceWaitIdle(context.GetDevice()), "Something went wrong when waiting on device idle!");
-		
 		for (uint32_t i = 0; i < m_ImageViews.size(); i++)
 		{
 			vkDestroyImageView(context.GetDevice(), m_ImageViews[i], nullptr);

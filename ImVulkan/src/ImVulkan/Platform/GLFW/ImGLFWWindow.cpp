@@ -50,7 +50,14 @@ namespace ImVulkan
 
 		{
 			VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+			createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 			VK_ASSERT(vkCreateFence(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_Fence), "Could not create fence!");
+		}
+
+		{
+			VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+			VK_ASSERT(vkCreateSemaphore(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_AcquireSephamore), "Could not create acquire semaphore!");
+			VK_ASSERT(vkCreateSemaphore(m_VulkanContext.GetDevice(), &createInfo, nullptr, &m_ReleaseSephamore), "Could not create release semaphore!");
 		}
 
 		{
@@ -68,12 +75,14 @@ namespace ImVulkan
 
 			VK_ASSERT(vkAllocateCommandBuffers(m_VulkanContext.GetDevice(), &allocateInfo, &m_CommandBuffer), "Could not allocate command buffer!");
 		}
-
-		glfwMakeContextCurrent(m_WindowHandle);
 	}
 
 	ImGLFWWindow::~ImGLFWWindow()
 	{
+		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
+
+		vkDestroySemaphore(m_VulkanContext.GetDevice(), m_AcquireSephamore, nullptr);
+		vkDestroySemaphore(m_VulkanContext.GetDevice(), m_ReleaseSephamore, nullptr);
 		vkDestroyFence(m_VulkanContext.GetDevice(), m_Fence, nullptr);
 		vkDestroyCommandPool(m_VulkanContext.GetDevice(), m_CommandPool, nullptr);
 
@@ -85,7 +94,6 @@ namespace ImVulkan
 		{
 			vkDestroyFramebuffer(m_VulkanContext.GetDevice(), m_FrameBuffers[i], nullptr);
 		}
-
 
 		m_VulkanContext.Destroy();
 
@@ -152,8 +160,10 @@ namespace ImVulkan
 	void ImGLFWWindow::OnUpdate()
 	{
 		uint32_t imageIndex;
-		VK_ASSERT(vkAcquireNextImageKHR(m_VulkanContext.GetDevice(), m_Swapchain.GetSwapchain(), UINT64_MAX, 0, m_Fence, &imageIndex), "Could not acquire next image");
+		VK_ASSERT(vkAcquireNextImageKHR(m_VulkanContext.GetDevice(), m_Swapchain.GetSwapchain(), UINT64_MAX, m_AcquireSephamore, nullptr, &imageIndex), "Could not acquire next image");
 
+		VK_ASSERT(vkWaitForFences(m_VulkanContext.GetDevice(), 1, &m_Fence, VK_TRUE, UINT64_MAX), "Could not wait for fences!");
+		VK_ASSERT(vkResetFences(m_VulkanContext.GetDevice(), 1, &m_Fence), "Could not reset fences!");
 		VK_ASSERT(vkResetCommandPool(m_VulkanContext.GetDevice(), m_CommandPool, 0), "Could not reset command pool!");
 
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -177,23 +187,24 @@ namespace ImVulkan
 		}
 		VK_ASSERT(vkEndCommandBuffer(m_CommandBuffer), "Could not end command buffer!");
 
-		VK_ASSERT(vkWaitForFences(m_VulkanContext.GetDevice(), 1, &m_Fence, VK_TRUE, UINT64_MAX), "Could not wait for fences!");
-		VK_ASSERT(vkResetFences(m_VulkanContext.GetDevice(), 1, &m_Fence), "Could not reset fences!");
-
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_CommandBuffer;
-		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetGraphicsQueue().queue, 1, &submitInfo, 0), "Could not submit queue");
-
-		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Could not wait for device idle!");
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_AcquireSephamore;
+		VkPipelineStageFlags waitMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		submitInfo.pWaitDstStageMask = &waitMask;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_ReleaseSephamore;
+		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetGraphicsQueue().queue, 1, &submitInfo, m_Fence), "Could not submit queue");
 
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_Swapchain.GetSwapchain();
 		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &m_ReleaseSephamore;
 		vkQueuePresentKHR(m_VulkanContext.GetGraphicsQueue().queue, &presentInfo);
-
-		glfwSwapBuffers(m_WindowHandle);
 	}
 
 	void ImGLFWWindow::ErrorCallback(int error, const char* description)

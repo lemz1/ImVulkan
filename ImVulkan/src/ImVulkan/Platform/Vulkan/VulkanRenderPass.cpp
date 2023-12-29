@@ -49,8 +49,6 @@ namespace ImVulkan
 
 	void VulkanRenderPass::Destroy(VulkanContext& context)
 	{
-		VK_ASSERT(vkDeviceWaitIdle(context.GetDevice()), "Something went wrong when waiting on device idle!");
-
 		vkDestroyRenderPass(context.GetDevice(), m_RenderPass, nullptr);
 	}
 }

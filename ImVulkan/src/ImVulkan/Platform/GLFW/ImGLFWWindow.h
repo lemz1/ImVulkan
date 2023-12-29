@@ -52,5 +52,7 @@ namespace ImVulkan
 		VkCommandBuffer m_CommandBuffer;
 		VkCommandPool m_CommandPool;
 		VkFence m_Fence;
+		VkSemaphore m_AcquireSephamore;
+		VkSemaphore m_ReleaseSephamore;
 	};
 }

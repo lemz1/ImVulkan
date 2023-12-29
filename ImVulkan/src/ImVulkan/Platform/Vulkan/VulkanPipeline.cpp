@@ -111,7 +111,6 @@ namespace ImVulkan
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
 		VK_ASSERT(vkCreateShaderModule(context.GetDevice(), &createInfo, nullptr, &shaderModule), "Could not create shader module!");
 
-
 		return shaderModule;
 	}
 }

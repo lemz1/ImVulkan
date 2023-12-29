@@ -7,8 +7,6 @@ namespace ImVulkan
 {
 	void VulkanContext::Destroy()
 	{
-		VK_ASSERT(vkDeviceWaitIdle(m_Device), "Something went wrong when waiting on device idle!");
-		
 		DestroyDevice();
 	}
 
