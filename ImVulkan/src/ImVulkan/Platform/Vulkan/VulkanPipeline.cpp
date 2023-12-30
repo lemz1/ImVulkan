@@ -4,9 +4,15 @@
 
 namespace ImVulkan
 {
-	VulkanPipeline::VulkanPipeline(VkDevice device, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass)
+	VulkanPipeline::VulkanPipeline(VkDevice device, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass,
+		                           VkVertexInputAttributeDescription* attributeDescriptions, uint32_t numAttributeDescriptions, VkVertexInputBindingDescription* bindingDescription)
 	{
+
 		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+		vertexInputState.vertexBindingDescriptionCount = bindingDescription ? 1 : 0;
+		vertexInputState.pVertexBindingDescriptions = bindingDescription;
+		vertexInputState.vertexAttributeDescriptionCount = numAttributeDescriptions;
+		vertexInputState.pVertexAttributeDescriptions = attributeDescriptions;
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 		inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;

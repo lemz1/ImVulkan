@@ -10,11 +10,12 @@
 #include "ImVulkan/Platform/Vulkan/VulkanSwapchain.h"
 #include "ImVulkan/Platform/Vulkan/VulkanRenderPass.h"
 #include "ImVulkan/Platform/Vulkan/VulkanPipeline.h"
-#include "ImVulkan/Platform/Vulkan/VulkanFrameBuffer.h"
 #include "ImVulkan/Platform/Vulkan/VulkanSemaphore.h"
 #include "ImVulkan/Platform/Vulkan/VulkanFence.h"
 #include "ImVulkan/Platform/Vulkan/VulkanCommandPool.h"
-#include "ImVulkan/Platform/Vulkan/VulkanCommandBuffer.h"
+#include "ImVulkan/Platform/Vulkan/Buffer/VulkanBuffer.h"
+#include "ImVulkan/Platform/Vulkan/Buffer/VulkanFrameBuffer.h"
+#include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
 
 #define FRAMES_IN_FLIGHT 2
 
@@ -64,6 +65,7 @@ namespace ImVulkan
 		VulkanFence m_Fences[FRAMES_IN_FLIGHT];
 		VulkanSemaphore m_AcquireSephamores[FRAMES_IN_FLIGHT];
 		VulkanSemaphore m_ReleaseSephamores[FRAMES_IN_FLIGHT];
+		VulkanBuffer m_VertexBuffer;
 
 		bool m_Minimized = false;
 	};

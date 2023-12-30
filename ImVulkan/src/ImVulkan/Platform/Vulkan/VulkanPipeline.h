@@ -9,7 +9,8 @@ namespace ImVulkan
 	{
 	public:
 		VulkanPipeline() = default;
-		VulkanPipeline(VkDevice device, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass);
+		VulkanPipeline(VkDevice device, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass,
+					   VkVertexInputAttributeDescription* attributeDescriptions, uint32_t numAttributeDescriptions, VkVertexInputBindingDescription* bindingDescription);
 
 		VulkanPipeline(const VulkanPipeline& other) noexcept = delete; // for now no copying
 

@@ -60,8 +60,8 @@ namespace ImVulkan
 		}
 
 		{
-			VkShaderModule vertexModule = VulkanPipeline::CreateShaderModule(m_VulkanContext.GetDevice(), "assets/shaders/triangle.vert.spv");
-			VkShaderModule fragmentModule = VulkanPipeline::CreateShaderModule(m_VulkanContext.GetDevice(), "assets/shaders/triangle.frag.spv");
+			VkShaderModule vertexModule = VulkanPipeline::CreateShaderModule(m_VulkanContext.GetDevice(), "assets/shaders/color.vert.spv");
+			VkShaderModule fragmentModule = VulkanPipeline::CreateShaderModule(m_VulkanContext.GetDevice(), "assets/shaders/color.frag.spv");
 
 			VkPipelineShaderStageCreateInfo shaderStages[2];
 			shaderStages[0] = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -74,7 +74,30 @@ namespace ImVulkan
 			shaderStages[1].module = fragmentModule;
 			shaderStages[1].pName = "main";
 
-			m_VulkanPipeline = VulkanPipeline(m_VulkanContext.GetDevice(), ARRAY_COUNT(shaderStages), shaderStages, m_RenderPass.GetRenderPass());
+			VkVertexInputBindingDescription bindDescription = {};
+			bindDescription.binding = 0;
+			bindDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+			bindDescription.stride = sizeof(float) * 5;
+
+			VkVertexInputAttributeDescription attributeDescriptions[2] = {};
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].offset = 0;
+
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attributeDescriptions[1].offset = sizeof(float) * 2;
+
+			m_VulkanPipeline = VulkanPipeline(
+				m_VulkanContext.GetDevice(), 
+				ARRAY_COUNT(shaderStages), 
+				shaderStages, 
+				m_RenderPass.GetRenderPass(), 
+				attributeDescriptions, 
+				2, 
+				&bindDescription);
 		}
 
 		m_FrameBuffers.resize(m_Swapchain.GetImages().size());
@@ -100,10 +123,37 @@ namespace ImVulkan
 
 			m_CommandBuffers[i] = VulkanCommandBuffer(m_VulkanContext.GetDevice(), m_CommandPools[i].GetCommandPool());
 		}
+
+		{
+			float vertexData[] = {
+				0.f, -.5f,
+				0.f, 1.f, 0.f,
+
+				-.5f, .5f,
+				1.f, 0.f, 0.f,
+
+				.5f, .5f,
+				0.f, 0.f, 1.f,
+			};
+
+			m_VertexBuffer = VulkanBuffer(
+				m_VulkanContext.GetDevice(),
+				m_VulkanContext.GetPhysicalDevice(),
+				sizeof(vertexData),
+				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+			void* data;
+			VK_ASSERT(vkMapMemory(m_VulkanContext.GetDevice(), m_VertexBuffer.GetMemory(), 0, sizeof(vertexData), 0, &data), "Could not map memory!");
+			memcpy(data, vertexData, sizeof(vertexData));
+			vkUnmapMemory(m_VulkanContext.GetDevice(), m_VertexBuffer.GetMemory());
+		}
 	}
 	ImGLFWWindow::~ImGLFWWindow()
 	{
 		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
+
+		m_VertexBuffer.Destroy(m_VulkanContext.GetDevice());
 
 		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
 		{
@@ -199,6 +249,9 @@ namespace ImVulkan
 
 		uint32_t imageIndex;
 		{
+			// if acquire next image gets called when the window is minimized it will lead to a validation error
+			// only way to not make that happen is to return early when the window is minimized
+
 			VkResult result = vkAcquireNextImageKHR(
 				m_VulkanContext.GetDevice(),
 				m_Swapchain.GetSwapchain(),
@@ -248,6 +301,11 @@ namespace ImVulkan
 
 			{ // Binding Pipeline
 				commandBuffer.BindPipeline(m_VulkanPipeline.GetVulkanPipeline(), VK_PIPELINE_BIND_POINT_GRAPHICS);
+			}
+
+			{
+				VkDeviceSize offset = 0;
+				vkCmdBindVertexBuffers(commandBuffer.GetCommandBuffer(), 0, 1, &m_VertexBuffer.GetBuffer(), &offset);
 			}
 
 			{ // Actual Rendering
