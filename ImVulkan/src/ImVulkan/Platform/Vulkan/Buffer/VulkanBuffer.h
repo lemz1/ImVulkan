@@ -20,7 +20,7 @@ namespace ImVulkan
 
 		void Destroy(VkDevice device);
 
-		void MapMemory(VkDevice device, void* data, VkDeviceSize dataSize);
+		void MapMemory(VkDevice device, VkPhysicalDevice physicalDevice, VkQueue queue, uint32_t queueFamilyIndex, void* data, VkDeviceSize dataSize);
 		void UnmapMemory(VkDevice device);
 
 		const VkBuffer& GetBuffer() const { return m_Buffer; }

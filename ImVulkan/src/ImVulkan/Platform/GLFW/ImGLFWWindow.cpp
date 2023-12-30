@@ -148,20 +148,33 @@ namespace ImVulkan
 				m_VulkanContext.GetDevice(),
 				m_VulkanContext.GetPhysicalDevice(),
 				sizeof(vertexData),
-				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			);
 
-			m_VertexBuffer.MapMemory(m_VulkanContext.GetDevice(), vertexData, sizeof(vertexData));
-			m_VertexBuffer.UnmapMemory(m_VulkanContext.GetDevice());
+			m_VertexBuffer.MapMemory(
+				m_VulkanContext.GetDevice(), 
+				m_VulkanContext.GetPhysicalDevice(), 
+				m_VulkanContext.GetGraphicsQueue().queue, 
+				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex, 
+				vertexData, 
+				sizeof(vertexData)
+			);
 
 			m_IndexBuffer = VulkanBuffer(
 				m_VulkanContext.GetDevice(),
 				m_VulkanContext.GetPhysicalDevice(),
 				sizeof(indexData),
-				VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-			m_IndexBuffer.MapMemory(m_VulkanContext.GetDevice(), indexData, sizeof(indexData));
-			m_IndexBuffer.UnmapMemory(m_VulkanContext.GetDevice());
+				VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			m_IndexBuffer.MapMemory(
+				m_VulkanContext.GetDevice(),
+				m_VulkanContext.GetPhysicalDevice(),
+				m_VulkanContext.GetGraphicsQueue().queue,
+				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex,
+				indexData,
+				sizeof(indexData)
+			);
 		}
 	}
 

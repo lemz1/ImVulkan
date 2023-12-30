@@ -1,6 +1,9 @@
 #include "imvkpch.h"
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanBuffer.h"
 
+#include "ImVulkan/Platform/Vulkan/VulkanCommandPool.h"
+#include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
+
 namespace ImVulkan
 {
 	VulkanBuffer::VulkanBuffer(VkDevice device, VkPhysicalDevice physicalDevice, size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties)
@@ -59,11 +62,52 @@ namespace ImVulkan
 		vkFreeMemory(device, m_Memory, nullptr);
 	}
 
-	void VulkanBuffer::MapMemory(VkDevice device, void* data, VkDeviceSize dataSize)
+	void VulkanBuffer::MapMemory(VkDevice device, VkPhysicalDevice physicalDevice, VkQueue queue, uint32_t queueFamilyIndex, void* data, VkDeviceSize dataSize)
 	{
-		void* bufferData;
-		VK_ASSERT(vkMapMemory(device, m_Memory, 0, dataSize, 0, &bufferData), "Could not map memory!");
-		memcpy(bufferData, data, dataSize);
+		#if 0
+		void* mapped;
+		VK_ASSERT(vkMapMemory(device, stagingBuffer.m_Memory, 0, dataSize, 0, &mapped), "Could not map memory!");
+		memcpy(mapped, data, dataSize);
+		stagingBuffer.UnmapMemory(device);
+		#else
+		VulkanBuffer stagingBuffer = VulkanBuffer(
+			device, 
+			physicalDevice, 
+			dataSize, 
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		);
+
+		{
+			void* mapped;
+			VK_ASSERT(vkMapMemory(device, stagingBuffer.m_Memory, 0, dataSize, 0, &mapped), "Could not map memory!");
+			memcpy(mapped, data, dataSize);
+			stagingBuffer.UnmapMemory(device);
+		}
+
+		VulkanCommandPool commandPool = VulkanCommandPool(device, queueFamilyIndex);
+		VulkanCommandBuffer commandBuffer = VulkanCommandBuffer(device, commandPool.GetCommandPool());
+
+		{
+			commandBuffer.BeginCommandBuffer();
+
+			VkBufferCopy region = { 0, 0, dataSize };
+			vkCmdCopyBuffer(commandBuffer.GetCommandBuffer(), stagingBuffer.GetBuffer(), m_Buffer, 1, &region);
+
+			commandBuffer.EndCommandBuffer();
+		}
+
+		{
+			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer.GetCommandBuffer();
+			VK_ASSERT(vkQueueSubmit(queue, 1, &submitInfo, nullptr), "Could not submit queue!");
+			VK_ASSERT(vkQueueWaitIdle(queue), "Could not wait for queue!");
+		}
+
+		commandPool.Destroy(device);
+		stagingBuffer.Destroy(device);
+		#endif
 	}
 
 	void VulkanBuffer::UnmapMemory(VkDevice device)
@@ -82,6 +126,9 @@ namespace ImVulkan
 			{
 				if ((deviceMemoryProperties.memoryTypes[i].propertyFlags & memoryProperties) == memoryProperties)
 				{
+					#ifdef VK_DEBUG_INFO
+					IMVK_INFO("Using memory heap index: " << deviceMemoryProperties.memoryTypes[i].heapIndex);
+					#endif
 					return i;
 				}
 			}

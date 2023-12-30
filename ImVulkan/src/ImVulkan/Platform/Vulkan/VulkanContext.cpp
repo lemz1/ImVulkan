@@ -133,6 +133,21 @@ namespace ImVulkan
 
 		m_GraphicsQueue.queueFamilyIndex = graphicsQueueIndex;
 		vkGetDeviceQueue(m_Device, m_GraphicsQueue.queueFamilyIndex, 0, &m_GraphicsQueue.queue);
+
+		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &deviceMemoryProperties);
+		#ifdef VK_DEBUG_INFO
+		IMVK_INFO("Num device memory heaps: " << deviceMemoryProperties.memoryHeapCount);
+		for (uint32_t i = 0; i < deviceMemoryProperties.memoryHeapCount; i++)
+		{
+			const char* isDeviceLocal = "false";
+			if (deviceMemoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+			{
+				isDeviceLocal = "true";
+			}
+			IMVK_INFO("Heap " << i << ": Size: " << ((double)deviceMemoryProperties.memoryHeaps[i].size * .001f * .001f) << "MB, Device local: " << isDeviceLocal);
+		}
+		#endif
 	}
 	
 	void VulkanContext::DestroyDevice()
