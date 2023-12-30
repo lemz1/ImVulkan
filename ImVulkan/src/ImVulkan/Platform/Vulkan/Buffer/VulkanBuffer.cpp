@@ -59,6 +59,18 @@ namespace ImVulkan
 		vkFreeMemory(device, m_Memory, nullptr);
 	}
 
+	void VulkanBuffer::MapMemory(VkDevice device, void* data, VkDeviceSize dataSize)
+	{
+		void* bufferData;
+		VK_ASSERT(vkMapMemory(device, m_Memory, 0, dataSize, 0, &bufferData), "Could not map memory!");
+		memcpy(bufferData, data, dataSize);
+	}
+
+	void VulkanBuffer::UnmapMemory(VkDevice device)
+	{
+		vkUnmapMemory(device, m_Memory);
+	}
+
 	uint32_t VulkanBuffer::FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags memoryProperties)
 	{
 		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;

@@ -20,6 +20,9 @@ namespace ImVulkan
 
 		void Destroy(VkDevice device);
 
+		void MapMemory(VkDevice device, void* data, VkDeviceSize dataSize);
+		void UnmapMemory(VkDevice device);
+
 		const VkBuffer& GetBuffer() const { return m_Buffer; }
 		const VkDeviceMemory GetMemory() const { return m_Memory; }
 	private:

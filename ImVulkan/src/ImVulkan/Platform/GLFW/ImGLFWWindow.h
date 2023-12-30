@@ -66,6 +66,7 @@ namespace ImVulkan
 		VulkanSemaphore m_AcquireSephamores[FRAMES_IN_FLIGHT];
 		VulkanSemaphore m_ReleaseSephamores[FRAMES_IN_FLIGHT];
 		VulkanBuffer m_VertexBuffer;
+		VulkanBuffer m_IndexBuffer;
 
 		bool m_Minimized = false;
 	};

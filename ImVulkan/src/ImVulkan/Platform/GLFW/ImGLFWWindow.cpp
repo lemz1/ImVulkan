@@ -126,14 +126,22 @@ namespace ImVulkan
 
 		{
 			float vertexData[] = {
-				0.f, -.5f,
+				-0.5f, -.5f,
 				0.f, 1.f, 0.f,
+
+				0.5f, -.5f,
+				1.f, 1.f, 1.f,
 
 				-.5f, .5f,
 				1.f, 0.f, 0.f,
 
 				.5f, .5f,
 				0.f, 0.f, 1.f,
+			};
+
+			uint32_t indexData[] = {
+				0, 1, 2,
+				1, 3, 2
 			};
 
 			m_VertexBuffer = VulkanBuffer(
@@ -143,16 +151,25 @@ namespace ImVulkan
 				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
-			void* data;
-			VK_ASSERT(vkMapMemory(m_VulkanContext.GetDevice(), m_VertexBuffer.GetMemory(), 0, sizeof(vertexData), 0, &data), "Could not map memory!");
-			memcpy(data, vertexData, sizeof(vertexData));
-			vkUnmapMemory(m_VulkanContext.GetDevice(), m_VertexBuffer.GetMemory());
+			m_VertexBuffer.MapMemory(m_VulkanContext.GetDevice(), vertexData, sizeof(vertexData));
+			m_VertexBuffer.UnmapMemory(m_VulkanContext.GetDevice());
+
+			m_IndexBuffer = VulkanBuffer(
+				m_VulkanContext.GetDevice(),
+				m_VulkanContext.GetPhysicalDevice(),
+				sizeof(indexData),
+				VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+			m_IndexBuffer.MapMemory(m_VulkanContext.GetDevice(), indexData, sizeof(indexData));
+			m_IndexBuffer.UnmapMemory(m_VulkanContext.GetDevice());
 		}
 	}
+
 	ImGLFWWindow::~ImGLFWWindow()
 	{
 		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
 
+		m_IndexBuffer.Destroy(m_VulkanContext.GetDevice());
 		m_VertexBuffer.Destroy(m_VulkanContext.GetDevice());
 
 		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
@@ -303,13 +320,12 @@ namespace ImVulkan
 				commandBuffer.BindPipeline(m_VulkanPipeline.GetVulkanPipeline(), VK_PIPELINE_BIND_POINT_GRAPHICS);
 			}
 
-			{
-				VkDeviceSize offset = 0;
-				vkCmdBindVertexBuffers(commandBuffer.GetCommandBuffer(), 0, 1, &m_VertexBuffer.GetBuffer(), &offset);
-			}
-
 			{ // Actual Rendering
-				commandBuffer.Draw(3);
+				VkDeviceSize offset = 0;
+				commandBuffer.BindVertexBuffers(&m_VertexBuffer.GetBuffer(), 1);
+				commandBuffer.BindIndexBuffer(m_IndexBuffer.GetBuffer());
+
+				commandBuffer.DrawIndexed(6);
 			}
 
 			{ // End RenderPass

@@ -68,8 +68,27 @@ namespace ImVulkan
 		vkCmdSetScissor(m_CommandBuffer, firstScissor, scissorCount, scissors);
 	}
 
+	void VulkanCommandBuffer::BindVertexBuffers(const VkBuffer* vertexBuffers, uint32_t vertexBufferCount, uint32_t bindingCount, uint32_t firstBinding)
+	{
+		VkDeviceSize* offsets = new VkDeviceSize[vertexBufferCount];
+		memset(offsets, 0, sizeof(VkDeviceSize) * vertexBufferCount);
+
+		vkCmdBindVertexBuffers(m_CommandBuffer, firstBinding, bindingCount, vertexBuffers, offsets);
+		delete[] offsets;
+	}
+
+	void VulkanCommandBuffer::BindIndexBuffer(VkBuffer indexBuffer, VkIndexType indexType, VkDeviceSize offset)
+	{
+		vkCmdBindIndexBuffer(m_CommandBuffer, indexBuffer, offset, indexType);
+	}
+
 	void VulkanCommandBuffer::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const
 	{
 		vkCmdDraw(m_CommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+	}
+
+	void VulkanCommandBuffer::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance) const
+	{
+		vkCmdDrawIndexed(m_CommandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 }
