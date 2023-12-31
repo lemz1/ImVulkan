@@ -4,8 +4,15 @@
 
 namespace ImVulkan
 {
-	VulkanPipeline::VulkanPipeline(VkDevice device, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass,
-		                           VkVertexInputAttributeDescription* attributeDescriptions, uint32_t numAttributeDescriptions, VkVertexInputBindingDescription* bindingDescription)
+	VulkanPipeline::VulkanPipeline(
+		VkDevice device, 
+		uint32_t shaderStageCount, 
+		VkPipelineShaderStageCreateInfo* shaderStages, 
+		VkRenderPass renderPass, 
+		VkVertexInputAttributeDescription* attributeDescriptions, 
+		uint32_t numAttributeDescriptions, 
+		VkVertexInputBindingDescription* bindingDescription
+	)
 	{
 		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 		vertexInputState.vertexBindingDescriptionCount = bindingDescription ? 1 : 0;
@@ -95,7 +102,10 @@ namespace ImVulkan
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 	}
 
-	VkShaderModule VulkanPipeline::CreateShaderModule(VkDevice device, const char* shaderFilePath)
+	VkShaderModule VulkanPipeline::CreateShaderModule(
+		VkDevice device, 
+		const char* shaderFilePath
+	)
 	{
 		VkShaderModule shaderModule = {};
 

@@ -4,6 +4,7 @@
 #include "ImVulkan/Platform/Vulkan/VulkanDevice.h"
 #include "ImVulkan/Platform/Vulkan/VulkanInstance.h"
 #include "ImVulkan/Platform/Vulkan/VulkanPhysicalDevice.h"
+#include "ImVulkan/Platform/Vulkan/VulkanDebugMessenger.h"
 
 namespace ImVulkan
 {
@@ -11,7 +12,14 @@ namespace ImVulkan
 	{
 	public:
 		VulkanContext() = default;
-		VulkanContext(uint32_t instanceExtensionCount, const char** instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions);
+		VulkanContext(
+			uint32_t instanceExtensionCount, 
+			const char** instanceExtensions, 
+			uint32_t deviceExtensionCount, 
+			const char** deviceExtensions
+		);
+
+		void InitDebugMessenger();
 
 		void Destroy();
 
@@ -27,5 +35,7 @@ namespace ImVulkan
 		VulkanInstance m_Instance;
 		VulkanPhysicalDevice m_PhysicalDevice;
 		VulkanDevice m_Device;
+		
+		VulkanDebugMessenger m_DebugMessenger;
 	};
 }

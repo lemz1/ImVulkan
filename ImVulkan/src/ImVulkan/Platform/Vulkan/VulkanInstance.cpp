@@ -3,7 +3,10 @@
 
 namespace ImVulkan
 {
-	VulkanInstance::VulkanInstance(uint32_t instanceExtensionCount, const char** instanceExtensions)
+	VulkanInstance::VulkanInstance(
+		uint32_t instanceExtensionCount, 
+		const char** instanceExtensions
+	)
 	{
 		uint32_t layerPropertyCount;
 		VK_ASSERT(vkEnumerateInstanceLayerProperties(&layerPropertyCount, nullptr), "Error enumerating instance layer properties!");

@@ -9,8 +9,15 @@ namespace ImVulkan
 	{
 	public:
 		VulkanPipeline() = default;
-		VulkanPipeline(VkDevice device, uint32_t shaderStageCount, VkPipelineShaderStageCreateInfo* shaderStages, VkRenderPass renderPass,
-					   VkVertexInputAttributeDescription* attributeDescriptions, uint32_t numAttributeDescriptions, VkVertexInputBindingDescription* bindingDescription);
+		VulkanPipeline(
+			VkDevice device, 
+			uint32_t shaderStageCount, 
+			VkPipelineShaderStageCreateInfo* shaderStages, 
+			VkRenderPass renderPass, 
+			VkVertexInputAttributeDescription* attributeDescriptions, 
+			uint32_t numAttributeDescriptions, 
+			VkVertexInputBindingDescription* bindingDescription
+		);
 
 		VulkanPipeline(const VulkanPipeline& other) noexcept = delete; // for now no copying
 
@@ -25,7 +32,10 @@ namespace ImVulkan
 		const VkPipeline GetVulkanPipeline() { return m_Pipeline; }
 		const VkPipelineLayout GetVulkanPipelineLayout() { return m_PipelineLayout; }
 	public:
-		static VkShaderModule CreateShaderModule(VkDevice device, const char* shaderFilePath);
+		static VkShaderModule CreateShaderModule(
+			VkDevice device, 
+			const char* shaderFilePath
+		);
 	private:
 		VkPipeline m_Pipeline;
 		VkPipelineLayout m_PipelineLayout;

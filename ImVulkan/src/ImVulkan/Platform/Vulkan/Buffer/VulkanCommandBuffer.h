@@ -8,7 +8,10 @@ namespace ImVulkan
 	{
 	public:
 		VulkanCommandBuffer() = default;
-		VulkanCommandBuffer(VkDevice device, VkCommandPool commandPool);
+		VulkanCommandBuffer(
+			VkDevice device, 
+			VkCommandPool commandPool
+		);
 
 		VulkanCommandBuffer(const VulkanCommandBuffer& other) noexcept = delete; // for now no copying
 
@@ -24,16 +27,50 @@ namespace ImVulkan
 		void BeginRenderPass(VkRenderPassBeginInfo* beginInfo) const;
 		void EndRenderPass() const;
 
-		void BindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint) const;
+		void BindPipeline(
+			VkPipeline pipeline, 
+			VkPipelineBindPoint pipelineBindPoint
+		) const;
 
-		void SetViewports(uint32_t firstViewport, uint32_t viewportCount, VkViewport* viewports);
-		void SetScissors(uint32_t firstScissor, uint32_t scissorCount, VkRect2D* scissors);
+		void SetViewports(
+			uint32_t firstViewport, 
+			uint32_t viewportCount, 
+			VkViewport* viewports
+		);
 
-		void BindVertexBuffers(const VkBuffer* vertexBuffers, uint32_t vertexBufferCount, uint32_t bindingCount = 1, uint32_t firstBinding = 0);
-		void BindIndexBuffer(VkBuffer indexBuffer, VkIndexType indexType = VK_INDEX_TYPE_UINT32, VkDeviceSize offset = 0);
+		void SetScissors(
+			uint32_t firstScissor, 
+			uint32_t scissorCount, 
+			VkRect2D* scissors
+		);
 
-		void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0) const;
-		void DrawIndexed(uint32_t indexCount, uint32_t instanceCount = 1, uint32_t firstIndex = 0, uint32_t vertexOffset = 0, uint32_t firstInstance = 0) const;
+		void BindVertexBuffers(
+			const VkBuffer* vertexBuffers, 
+			uint32_t vertexBufferCount, 
+			uint32_t bindingCount = 1, 
+			uint32_t firstBinding = 0
+		);
+
+		void BindIndexBuffer(
+			VkBuffer indexBuffer, 
+			VkIndexType indexType = VK_INDEX_TYPE_UINT32, 
+			VkDeviceSize offset = 0
+		);
+
+		void Draw(
+			uint32_t vertexCount, 
+			uint32_t instanceCount = 1, 
+			uint32_t firstVertex = 0, 
+			uint32_t firstInstance = 0
+		) const;
+
+		void DrawIndexed(
+			uint32_t indexCount, 
+			uint32_t instanceCount = 1, 
+			uint32_t firstIndex = 0, 
+			uint32_t vertexOffset = 0, 
+			uint32_t firstInstance = 0
+		) const;
 
 		const VkCommandBuffer& GetCommandBuffer() { return m_CommandBuffer; }
 	private:

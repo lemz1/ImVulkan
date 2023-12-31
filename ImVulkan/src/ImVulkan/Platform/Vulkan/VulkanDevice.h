@@ -8,7 +8,11 @@ namespace ImVulkan
 	{
 	public:
 		VulkanDevice() = default;
-		VulkanDevice(VkPhysicalDevice physicalDevice, uint32_t deviceExtensionCount, const char** deviceExtensions);
+		VulkanDevice(
+			VkPhysicalDevice physicalDevice, 
+			uint32_t deviceExtensionCount, 
+			const char** deviceExtensions
+		);
 
 		VulkanDevice(const VulkanDevice& other) noexcept = delete; // for now no copying
 

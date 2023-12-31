@@ -3,7 +3,10 @@
 
 namespace ImVulkan
 {
-	VulkanRenderPass::VulkanRenderPass(VkDevice device, VkFormat format)
+	VulkanRenderPass::VulkanRenderPass(
+		VkDevice device, 
+		VkFormat format
+	)
 	{
 		VkAttachmentDescription attachmentDescription = {};
 		attachmentDescription.format = format;

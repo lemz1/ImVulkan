@@ -8,7 +8,13 @@ namespace ImVulkan
 	{
 	public:
 		VulkanFrameBuffer() = default;
-		VulkanFrameBuffer(VkDevice device, VkRenderPass renderPass, VkImageView imageView, uint32_t width, uint32_t height);
+		VulkanFrameBuffer(
+			VkDevice device, 
+			VkRenderPass renderPass, 
+			VkImageView imageView, 
+			uint32_t width, 
+			uint32_t height
+		);
 
 		VulkanFrameBuffer(const VulkanFrameBuffer& other) noexcept = delete; // for now no copying
 

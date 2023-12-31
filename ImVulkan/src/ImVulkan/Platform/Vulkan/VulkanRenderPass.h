@@ -9,7 +9,10 @@ namespace ImVulkan
 	{
 	public:
 		VulkanRenderPass() = default;
-		VulkanRenderPass(VkDevice device, VkFormat format);
+		VulkanRenderPass(
+			VkDevice device, 
+			VkFormat format
+		);
 
 		VulkanRenderPass(const VulkanRenderPass& other) noexcept = delete; // for now no copying
 

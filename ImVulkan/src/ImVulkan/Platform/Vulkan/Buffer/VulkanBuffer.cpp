@@ -3,10 +3,17 @@
 
 #include "ImVulkan/Platform/Vulkan/VulkanCommandPool.h"
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
+#include "ImVulkan/Platform/Vulkan/Util/VulkanMemory.h"
 
 namespace ImVulkan
 {
-	VulkanBuffer::VulkanBuffer(VkDevice device, VkPhysicalDevice physicalDevice, size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties)
+	VulkanBuffer::VulkanBuffer(
+		VkDevice device, 
+		VkPhysicalDevice physicalDevice, 
+		size_t size, 
+		VkBufferUsageFlags usage, 
+		VkMemoryPropertyFlags memoryProperties
+	)
 	{
 		{
 			VkBufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -20,7 +27,7 @@ namespace ImVulkan
 			VkMemoryRequirements memoryRequirements;
 			vkGetBufferMemoryRequirements(device, m_Buffer, &memoryRequirements);
 
-			uint32_t memoryIndex = FindMemoryType(physicalDevice, memoryRequirements.memoryTypeBits, memoryProperties);
+			uint32_t memoryIndex = VulkanMemory::FindMemoryType(physicalDevice, memoryRequirements.memoryTypeBits, memoryProperties);
 
 			VkMemoryAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 			allocateInfo.allocationSize = memoryRequirements.size;
@@ -62,7 +69,14 @@ namespace ImVulkan
 		vkFreeMemory(device, m_Memory, nullptr);
 	}
 
-	void VulkanBuffer::MapMemory(VkDevice device, VkPhysicalDevice physicalDevice, VkQueue queue, uint32_t queueFamilyIndex, void* data, VkDeviceSize dataSize)
+	void VulkanBuffer::MapMemory(
+		VkDevice device, 
+		VkPhysicalDevice physicalDevice, 
+		VkQueue queue, 
+		uint32_t queueFamilyIndex, 
+		void* data, 
+		VkDeviceSize dataSize
+	)
 	{
 		#if 0
 		void* mapped;
@@ -113,28 +127,5 @@ namespace ImVulkan
 	void VulkanBuffer::UnmapMemory(VkDevice device)
 	{
 		vkUnmapMemory(device, m_Memory);
-	}
-
-	uint32_t VulkanBuffer::FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags memoryProperties)
-	{
-		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
-
-		for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++)
-		{
-			if ((typeFilter & (1 << i)) != 0)
-			{
-				if ((deviceMemoryProperties.memoryTypes[i].propertyFlags & memoryProperties) == memoryProperties)
-				{
-					#ifdef VK_DEBUG_INFO
-					IMVK_INFO("Using memory heap index: " << deviceMemoryProperties.memoryTypes[i].heapIndex);
-					#endif
-					return i;
-				}
-			}
-		}
-
-		IMVK_ASSERT(true, "Error when trying to find memory type!");
-		return UINT32_MAX;
 	}
 }

@@ -16,6 +16,7 @@
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanBuffer.h"
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanFrameBuffer.h"
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
+#include "ImVulkan/Platform/Vulkan/VulkanImage.h"
 
 #define FRAMES_IN_FLIGHT 2
 
@@ -67,6 +68,7 @@ namespace ImVulkan
 		VulkanSemaphore m_ReleaseSephamores[FRAMES_IN_FLIGHT];
 		VulkanBuffer m_VertexBuffer;
 		VulkanBuffer m_IndexBuffer;
+		VulkanImage m_Image;
 
 		bool m_Minimized = false;
 	};

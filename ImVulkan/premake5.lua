@@ -20,7 +20,8 @@ project "ImVulkan"
         IncludeDir.glfw,
         IncludeDir.glm,
         IncludeDir.imgui,
-        IncludeDir.VulkanSDK
+        IncludeDir.VulkanSDK,
+        IncludeDir.stb
     }
 
     links 

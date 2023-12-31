@@ -10,8 +10,14 @@ namespace ImVulkan
 	{
 	public:
 		VulkanSwapchain() = default;
-		VulkanSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex,
-						VkSurfaceKHR surface, VkImageUsageFlags usage, VkSwapchainKHR oldSwapchain = nullptr);
+		VulkanSwapchain(
+			VkDevice device, 
+			VkPhysicalDevice physicalDevice, 
+			uint32_t queueFamilyIndex, 
+			VkSurfaceKHR surface, 
+			VkImageUsageFlags usage, 
+			VkSwapchainKHR oldSwapchain = nullptr
+		);
 
 		VulkanSwapchain(const VulkanSwapchain& other) noexcept = delete; // for now no copying
 

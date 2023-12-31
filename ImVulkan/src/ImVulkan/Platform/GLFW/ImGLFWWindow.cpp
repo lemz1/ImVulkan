@@ -3,6 +3,9 @@
 
 #include "ImVulkan/Core/Core.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
 namespace ImVulkan
 {
 	Window* Window::Create(const WindowSpecification& spec)
@@ -56,6 +59,8 @@ namespace ImVulkan
 				instanceExtensionCount + ARRAY_COUNT(additionalInstanceExtensions), mergedInstanceExtensions, 
 				ARRAY_COUNT(deviceExtensions), deviceExtensions
 			);
+
+			m_VulkanContext.InitDebugMessenger();
 
 			delete[] mergedInstanceExtensions;
 		}
@@ -192,6 +197,35 @@ namespace ImVulkan
 				sizeof(indexData)
 			);
 		}
+
+		{
+			int width, height, channels;
+			uint8_t* data = stbi_load("assets/images/stage_light.png", &width, &height, &channels, 4);
+			IMVK_ASSERT(data == nullptr, "Image Not found!");
+
+			m_Image = VulkanImage(
+				m_VulkanContext.GetDevice(), 
+				m_VulkanContext.GetPhysicalDevice(), 
+				width, 
+				height, 
+				VK_FORMAT_R8G8B8A8_UNORM, 
+				VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+			);
+
+			m_Image.UploadDataToImage(
+				m_VulkanContext.GetDevice(),
+				m_VulkanContext.GetPhysicalDevice(),
+				m_VulkanContext.GetQueue(),
+				m_VulkanContext.GetQueueFamilyIndex(),
+				data,
+				width * height * 4,
+				width,
+				height,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+			);
+			stbi_image_free(data);
+		}
 	}
 
 	ImGLFWWindow::~ImGLFWWindow()
@@ -200,6 +234,8 @@ namespace ImVulkan
 
 		m_IndexBuffer.Destroy(m_VulkanContext.GetDevice());
 		m_VertexBuffer.Destroy(m_VulkanContext.GetDevice());
+
+		m_Image.Destroy(m_VulkanContext.GetDevice());
 
 		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
 		{
@@ -439,8 +475,6 @@ namespace ImVulkan
 			m_RenderPass = VulkanRenderPass(m_VulkanContext.GetDevice(), m_Swapchain.GetFormat());
 		}
 
-		
-
 		{
 			for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
 			{
@@ -460,6 +494,8 @@ namespace ImVulkan
 				);
 			}
 		}
+
+
 	}
 
 	void ImGLFWWindow::ErrorCallback(int error, const char* description)

@@ -8,7 +8,10 @@ namespace ImVulkan
 	{
 	public:
 		VulkanCommandPool() = default;
-		VulkanCommandPool(VkDevice device, uint32_t queueFamilyIndex);
+		VulkanCommandPool(
+			VkDevice device, 
+			uint32_t queueFamilyIndex
+		);
 
 		VulkanCommandPool(const VulkanCommandPool& other) noexcept = delete; // for now no copying
 

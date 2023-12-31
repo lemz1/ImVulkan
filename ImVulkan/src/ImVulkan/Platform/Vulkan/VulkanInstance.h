@@ -8,7 +8,10 @@ namespace ImVulkan
 	{
 	public:
 		VulkanInstance() = default;
-		VulkanInstance(uint32_t instanceExtensionCount, const char** instanceExtensions);
+		VulkanInstance(
+			uint32_t instanceExtensionCount, 
+			const char** instanceExtensions
+		);
 
 		VulkanInstance(const VulkanInstance& other) noexcept = delete; // for now no copying
 

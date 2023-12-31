@@ -3,7 +3,10 @@
 
 namespace ImVulkan
 {
-	VulkanCommandPool::VulkanCommandPool(VkDevice device, uint32_t queueFamilyIndex)
+	VulkanCommandPool::VulkanCommandPool(
+		VkDevice device, 
+		uint32_t queueFamilyIndex
+	)
 	{
 		VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 		createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;

@@ -3,7 +3,10 @@
 
 namespace ImVulkan
 {
-	VulkanCommandBuffer::VulkanCommandBuffer(VkDevice device, VkCommandPool commandPool)
+	VulkanCommandBuffer::VulkanCommandBuffer(
+		VkDevice device, 
+		VkCommandPool commandPool
+	)
 	{
 		VkCommandBufferAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 		allocateInfo.commandPool = commandPool;
@@ -53,22 +56,38 @@ namespace ImVulkan
 		vkCmdEndRenderPass(m_CommandBuffer);
 	}
 
-	void VulkanCommandBuffer::BindPipeline(VkPipeline pipeline, VkPipelineBindPoint pipelineBindPoint) const
+	void VulkanCommandBuffer::BindPipeline(
+		VkPipeline pipeline, 
+		VkPipelineBindPoint pipelineBindPoint
+	) const
 	{
 		vkCmdBindPipeline(m_CommandBuffer, pipelineBindPoint, pipeline);
 	}
 
-	void VulkanCommandBuffer::SetViewports(uint32_t firstViewport, uint32_t viewportCount, VkViewport* viewports)
+	void VulkanCommandBuffer::SetViewports(
+		uint32_t firstViewport, 
+		uint32_t viewportCount, 
+		VkViewport* viewports
+	)
 	{
 		vkCmdSetViewport(m_CommandBuffer, firstViewport, viewportCount, viewports);
 	}
 
-	void VulkanCommandBuffer::SetScissors(uint32_t firstScissor, uint32_t scissorCount, VkRect2D* scissors)
+	void VulkanCommandBuffer::SetScissors(
+		uint32_t firstScissor, 
+		uint32_t scissorCount, 
+		VkRect2D* scissors
+	)
 	{
 		vkCmdSetScissor(m_CommandBuffer, firstScissor, scissorCount, scissors);
 	}
 
-	void VulkanCommandBuffer::BindVertexBuffers(const VkBuffer* vertexBuffers, uint32_t vertexBufferCount, uint32_t bindingCount, uint32_t firstBinding)
+	void VulkanCommandBuffer::BindVertexBuffers(
+		const VkBuffer* vertexBuffers, 
+		uint32_t vertexBufferCount, 
+		uint32_t bindingCount, 
+		uint32_t firstBinding
+	)
 	{
 		VkDeviceSize* offsets = new VkDeviceSize[vertexBufferCount];
 		memset(offsets, 0, sizeof(VkDeviceSize) * vertexBufferCount);
@@ -77,17 +96,32 @@ namespace ImVulkan
 		delete[] offsets;
 	}
 
-	void VulkanCommandBuffer::BindIndexBuffer(VkBuffer indexBuffer, VkIndexType indexType, VkDeviceSize offset)
+	void VulkanCommandBuffer::BindIndexBuffer(
+		VkBuffer indexBuffer, 
+		VkIndexType indexType, 
+		VkDeviceSize offset
+	)
 	{
 		vkCmdBindIndexBuffer(m_CommandBuffer, indexBuffer, offset, indexType);
 	}
 
-	void VulkanCommandBuffer::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const
+	void VulkanCommandBuffer::Draw(
+		uint32_t vertexCount, 
+		uint32_t instanceCount, 
+		uint32_t firstVertex, 
+		uint32_t firstInstance
+	) const
 	{
 		vkCmdDraw(m_CommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
 	}
 
-	void VulkanCommandBuffer::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance) const
+	void VulkanCommandBuffer::DrawIndexed(
+		uint32_t indexCount, 
+		uint32_t instanceCount, 
+		uint32_t firstIndex, 
+		uint32_t vertexOffset, 
+		uint32_t firstInstance
+	) const
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}

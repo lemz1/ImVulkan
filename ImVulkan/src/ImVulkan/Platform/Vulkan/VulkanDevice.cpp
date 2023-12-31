@@ -3,7 +3,11 @@
 
 namespace ImVulkan
 {
-	VulkanDevice::VulkanDevice(VkPhysicalDevice physicalDevice, uint32_t deviceExtensionCount, const char** deviceExtensions)
+	VulkanDevice::VulkanDevice(
+		VkPhysicalDevice physicalDevice, 
+		uint32_t deviceExtensionCount, 
+		const char** deviceExtensions
+	)
 	{
 		uint32_t numQueueFamilies = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, nullptr);

@@ -3,7 +3,13 @@
 
 namespace ImVulkan
 {
-	VulkanFrameBuffer::VulkanFrameBuffer(VkDevice device, VkRenderPass renderPass, VkImageView imageView, uint32_t width, uint32_t height)
+	VulkanFrameBuffer::VulkanFrameBuffer(
+		VkDevice device, 
+		VkRenderPass renderPass, 
+		VkImageView imageView, 
+		uint32_t width, 
+		uint32_t height
+	)
 	{
 		VkFramebufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		createInfo.renderPass = renderPass;

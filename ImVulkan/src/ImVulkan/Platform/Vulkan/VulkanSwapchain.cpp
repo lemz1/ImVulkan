@@ -3,8 +3,14 @@
 
 namespace ImVulkan
 {
-	VulkanSwapchain::VulkanSwapchain(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex,
-									 VkSurfaceKHR surface, VkImageUsageFlags usage, VkSwapchainKHR oldSwapchain)
+	VulkanSwapchain::VulkanSwapchain(
+		VkDevice device, 
+		VkPhysicalDevice physicalDevice, 
+		uint32_t queueFamilyIndex, 
+		VkSurfaceKHR surface, 
+		VkImageUsageFlags usage, 
+		VkSwapchainKHR oldSwapchain
+	)
 	{
 		VkBool32 supportsPresent = 0;
 		VK_ASSERT(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, surface, &supportsPresent), "Error present not allowed!");
