@@ -36,12 +36,28 @@ namespace ImVulkan
 		IMVK_ASSERT(!glfwVulkanSupported(), "GLFW: Vulkan is not supported!");
 
 		{
+			const char* additionalInstanceExtensions[] = {
+				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+				VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME
+			};
+
 			uint32_t instanceExtensionCount = 0;
 			const char** instanceExtensions = glfwGetRequiredInstanceExtensions(&instanceExtensionCount);
 
+			const char** mergedInstanceExtensions = new const char* [instanceExtensionCount + ARRAY_COUNT(additionalInstanceExtensions)];
+
+			memcpy(mergedInstanceExtensions, instanceExtensions, instanceExtensionCount * sizeof(const char*));
+
+			memcpy(mergedInstanceExtensions + instanceExtensionCount, additionalInstanceExtensions, ARRAY_COUNT(additionalInstanceExtensions) * sizeof(const char*));
+
 			const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-			m_VulkanContext.CreateDevice(instanceExtensionCount, instanceExtensions, ARRAY_COUNT(deviceExtensions), deviceExtensions);
+			m_VulkanContext = VulkanContext(
+				instanceExtensionCount + ARRAY_COUNT(additionalInstanceExtensions), mergedInstanceExtensions, 
+				ARRAY_COUNT(deviceExtensions), deviceExtensions
+			);
+
+			delete[] mergedInstanceExtensions;
 		}
 
 		{
@@ -50,7 +66,7 @@ namespace ImVulkan
 			m_Swapchain = VulkanSwapchain(
 				m_VulkanContext.GetDevice(),
 				m_VulkanContext.GetPhysicalDevice(),
-				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex,
+				m_VulkanContext.GetQueueFamilyIndex(),
 				m_Surface,
 				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 		}
@@ -119,7 +135,7 @@ namespace ImVulkan
 			m_AcquireSephamores[i] = VulkanSemaphore(m_VulkanContext.GetDevice());
 			m_ReleaseSephamores[i] = VulkanSemaphore(m_VulkanContext.GetDevice());
 
-			m_CommandPools[i] = VulkanCommandPool(m_VulkanContext.GetDevice(), m_VulkanContext.GetGraphicsQueue().queueFamilyIndex);
+			m_CommandPools[i] = VulkanCommandPool(m_VulkanContext.GetDevice(), m_VulkanContext.GetQueueFamilyIndex());
 
 			m_CommandBuffers[i] = VulkanCommandBuffer(m_VulkanContext.GetDevice(), m_CommandPools[i].GetCommandPool());
 		}
@@ -155,8 +171,8 @@ namespace ImVulkan
 			m_VertexBuffer.MapMemory(
 				m_VulkanContext.GetDevice(), 
 				m_VulkanContext.GetPhysicalDevice(), 
-				m_VulkanContext.GetGraphicsQueue().queue, 
-				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex, 
+				m_VulkanContext.GetQueue(),
+				m_VulkanContext.GetQueueFamilyIndex(),
 				vertexData, 
 				sizeof(vertexData)
 			);
@@ -170,8 +186,8 @@ namespace ImVulkan
 			m_IndexBuffer.MapMemory(
 				m_VulkanContext.GetDevice(),
 				m_VulkanContext.GetPhysicalDevice(),
-				m_VulkanContext.GetGraphicsQueue().queue,
-				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex,
+				m_VulkanContext.GetQueue(),
+				m_VulkanContext.GetQueueFamilyIndex(),
 				indexData,
 				sizeof(indexData)
 			);
@@ -359,7 +375,7 @@ namespace ImVulkan
 		submitInfo.pWaitDstStageMask = &waitMask;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_ReleaseSephamores[frameIndex].GetSemaphore();
-		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetGraphicsQueue().queue, 1, &submitInfo, m_Fences[frameIndex].GetFence()), "Could not submit queue");
+		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetQueue(), 1, &submitInfo, m_Fences[frameIndex].GetFence()), "Could not submit queue");
 
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
@@ -368,7 +384,7 @@ namespace ImVulkan
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_ReleaseSephamores[frameIndex].GetSemaphore();
 		{
-			VkResult result = vkQueuePresentKHR(m_VulkanContext.GetGraphicsQueue().queue, &presentInfo);
+			VkResult result = vkQueuePresentKHR(m_VulkanContext.GetQueue(), &presentInfo);
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 			{
 				// Swapchain out of date
@@ -403,7 +419,7 @@ namespace ImVulkan
 			m_Swapchain = VulkanSwapchain(
 				m_VulkanContext.GetDevice(),
 				m_VulkanContext.GetPhysicalDevice(),
-				m_VulkanContext.GetGraphicsQueue().queueFamilyIndex,
+				m_VulkanContext.GetQueueFamilyIndex(),
 				m_Surface,
 				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 				oldSwapchain);
