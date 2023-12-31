@@ -35,19 +35,19 @@ project "ImVulkanApp"
         defines { "NDEBUG" }
         optimize "On"
 
-    -- shaders
     filter "files:**.vert"
-    buildmessage 'Compiling %{file.relpath}'
-    buildcommands 
-    {
-        'glslc.exe -fshader-stage=vert "%{file.relpath}" -o "%{file.relpath}.spv"'
-    }
-    buildoutputs('%{file.relpath}.spv')
-    
+        buildmessage 'Compiling %{file.abspath}'
+        buildcommands 
+        {
+            'glslc.exe -fshader-stage=vert "%{file.abspath}" -o "%{file.abspath}.spv"'
+        }
+        buildoutputs('%{file.abspath}.spv')
+
     filter "files:**.frag"
-    buildmessage 'Compiling %{file.relpath}'
-    buildcommands 
-    {
-        'glslc.exe -fshader-stage=frag "%{file.relpath}" -o "%{file.relpath}.spv"'
-    }
-    buildoutputs('%{file.relpath}.spv')
+        buildmessage 'Compiling %{file.abspath}'
+        buildcommands 
+        {
+            'glslc.exe -fshader-stage=frag "%{file.abspath}" -o "%{file.abspath}.spv"'
+        }
+        buildoutputs('%{file.abspath}.spv')
+
