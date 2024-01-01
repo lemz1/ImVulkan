@@ -36,6 +36,8 @@ namespace ImVulkan
 
 			m_LayerStack.OnUpdate(deltaTime);
 
+			m_LayerStack.OnDraw();
+
 			m_Window->OnUpdate();
 		}
 	}

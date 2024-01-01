@@ -16,6 +16,7 @@ namespace ImVulkan
 		if (std::find(m_Layers.begin(), m_Layers.end(), layer) == m_Layers.end())
 		{
 			m_Layers.push_back(layer);
+			layer->OnCreate();
 		}
 	}
 
@@ -25,6 +26,7 @@ namespace ImVulkan
 		if (it != m_Layers.end())
 		{
 			m_Layers.erase(it);
+			layer->OnDestroy();
 		}
 	}
 
@@ -33,6 +35,14 @@ namespace ImVulkan
 		for (auto layer : m_Layers)
 		{
 			layer->OnUpdate(deltaTime);
+		}
+	}
+
+	void LayerStack::OnDraw()
+	{
+		for (auto layer : m_Layers)
+		{
+			layer->OnDraw();
 		}
 	}
 }

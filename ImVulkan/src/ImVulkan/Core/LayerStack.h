@@ -17,6 +17,8 @@ namespace ImVulkan
 
 		void OnUpdate(const double deltaTime);
 
+		void OnDraw();
+
 		const std::vector<Layer*>& GetLayers() const { return m_Layers; }
 	private:
 		std::vector<Layer*> m_Layers;
