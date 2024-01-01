@@ -1,4 +1,5 @@
 #include "imvkpch.h"
+#ifdef IMVK_PLATFORM_GLFW
 #include "ImVulkan/Platform/GLFW/ImGLFWWindow.h"
 
 #include "ImVulkan/Core/Core.h"
@@ -627,3 +628,4 @@ namespace ImVulkan
 		fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 	}
 }
+#endif

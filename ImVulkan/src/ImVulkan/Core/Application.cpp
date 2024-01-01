@@ -1,6 +1,8 @@
 #include "imvkpch.h"
 #include "ImVulkan/Core/Application.h"
 
+#include "ImVulkan/Util/Time.h"
+
 namespace ImVulkan
 {
 	Application* Application::s_Instance = nullptr;
@@ -17,14 +19,22 @@ namespace ImVulkan
 
 	void Application::Run()
 	{
+		double time = 0;
+
 		while (true)
 		{
+			const double newTime = Time::GetTime();
+			const double deltaTime = newTime - time;
+			time = newTime;
+
 			m_Window->PollEvents();
 
 			if (m_Window->ShouldClose())
 			{
 				break;
 			}
+
+			m_LayerStack.OnUpdate(deltaTime);
 
 			m_Window->OnUpdate();
 		}

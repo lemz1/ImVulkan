@@ -1,4 +1,5 @@
 #pragma once
+#ifdef IMVK_PLATFORM_GLFW
 
 #include "ImVulkan/Core/Window.h"
 
@@ -78,3 +79,4 @@ namespace ImVulkan
 		bool m_Minimized = false;
 	};
 }
+#endif
