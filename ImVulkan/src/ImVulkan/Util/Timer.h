@@ -18,24 +18,24 @@ namespace ImVulkan
 			m_StartTime = std::chrono::high_resolution_clock::now();
 		}
 
-		float ElapsedSeconds()
+		double ElapsedSeconds()
 		{
 			return ElapsedMilliseconds() * .001f;
 		}
 
-		float ElapsedMilliseconds()
+		double ElapsedMilliseconds()
 		{
 			return ElapsedMicroseconds() * .001f;
 		}
 
-		float ElapsedMicroseconds()
+		double ElapsedMicroseconds()
 		{
 			return ElapsedNanoseconds() * .001f;
 		}
 
-		float ElapsedNanoseconds()
+		double ElapsedNanoseconds()
 		{
-			return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_StartTime).count();
+			return static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_StartTime).count());
 		}
 ;	private:
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_StartTime;

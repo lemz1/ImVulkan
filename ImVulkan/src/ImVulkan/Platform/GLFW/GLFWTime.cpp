@@ -13,7 +13,7 @@ namespace ImVulkan::Time
 
 	uint64_t GetTimeMS()
 	{
-		return glfwGetTime() * 1000;
+		return static_cast<uint64_t>(glfwGetTime()) * 1000;
 	}
 }
 #endif
