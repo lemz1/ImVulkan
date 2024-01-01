@@ -31,6 +31,10 @@ namespace ImVulkan
 			VkImageLayout finalLayout,
 			VkAccessFlags dstAccessMask
 		);
+
+		const VkImage& GetImage() { return m_Image; }
+		const VkImageView& GetImageView() { return m_ImageView; }
+		const VkDeviceMemory& GetMemory() { return m_Memory; }
 	private:
 		VkImage m_Image = nullptr;
 		VkImageView m_ImageView = nullptr;

@@ -8,9 +8,7 @@ project "ImVulkanApp"
         "**.h", 
         "**.hpp",
         "**.c" ,
-        "**.cpp",
-        "**.vert",
-        "**.frag"
+        "**.cpp"
     }
 
     includedirs 
@@ -34,20 +32,3 @@ project "ImVulkanApp"
     filter "configurations:Release"
         defines { "NDEBUG" }
         optimize "On"
-
-    filter "files:**.vert"
-        buildmessage 'Compiling %{file.abspath}'
-        buildcommands 
-        {
-            'glslc.exe -fshader-stage=vert "%{file.abspath}" -o "%{file.abspath}.spv"'
-        }
-        buildoutputs('%{file.abspath}.spv')
-
-    filter "files:**.frag"
-        buildmessage 'Compiling %{file.abspath}'
-        buildcommands 
-        {
-            'glslc.exe -fshader-stage=frag "%{file.abspath}" -o "%{file.abspath}.spv"'
-        }
-        buildoutputs('%{file.abspath}.spv')
-

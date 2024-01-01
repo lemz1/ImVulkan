@@ -70,6 +70,11 @@ namespace ImVulkan
 		VulkanBuffer m_IndexBuffer;
 		VulkanImage m_Image;
 
+		VkSampler m_Sampler;
+		VkDescriptorSet m_Descriptor;
+		VkDescriptorPool m_DescriptorPool;
+		VkDescriptorSetLayout m_DescriptorSetLayout;
+
 		bool m_Minimized = false;
 	};
 }

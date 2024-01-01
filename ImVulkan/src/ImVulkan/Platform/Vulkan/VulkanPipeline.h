@@ -16,7 +16,9 @@ namespace ImVulkan
 			VkRenderPass renderPass, 
 			VkVertexInputAttributeDescription* attributeDescriptions, 
 			uint32_t numAttributeDescriptions, 
-			VkVertexInputBindingDescription* bindingDescription
+			VkVertexInputBindingDescription* bindingDescription,
+			uint32_t numSetLayouts,
+			VkDescriptorSetLayout* setLayouts
 		);
 
 		VulkanPipeline(const VulkanPipeline& other) noexcept = delete; // for now no copying

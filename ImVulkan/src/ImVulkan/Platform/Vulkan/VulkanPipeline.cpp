@@ -11,7 +11,9 @@ namespace ImVulkan
 		VkRenderPass renderPass, 
 		VkVertexInputAttributeDescription* attributeDescriptions, 
 		uint32_t numAttributeDescriptions, 
-		VkVertexInputBindingDescription* bindingDescription
+		VkVertexInputBindingDescription* bindingDescription,
+		uint32_t numSetLayouts,
+		VkDescriptorSetLayout* setLayouts
 	)
 	{
 		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
@@ -35,7 +37,13 @@ namespace ImVulkan
 
 		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
 		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.blendEnable = VK_FALSE;
+		colorBlendAttachment.blendEnable = VK_TRUE;
+		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
 		VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
 		colorBlendState.attachmentCount = 1;
@@ -48,6 +56,9 @@ namespace ImVulkan
 
 		{
 			VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+			createInfo.setLayoutCount = numSetLayouts;
+			createInfo.pSetLayouts = setLayouts;
+
 			VK_ASSERT(vkCreatePipelineLayout(device, &createInfo, nullptr, &m_PipelineLayout), "Could not create pipeline layout!");
 		}
 
