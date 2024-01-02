@@ -10,8 +10,6 @@ workspace "ImVulkan"
     targetdir("%{wks.location}/bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/%{prj.name}")
     objdir("%{wks.location}/bin-int/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/%{prj.name}")
 
-    defines {  }
-
     filter "system:linux"
         defines 
         { 
@@ -30,4 +28,5 @@ workspace "ImVulkan"
 
 
 include "ImVulkanExternal.lua"
+
 include "ImVulkanApp"

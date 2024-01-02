@@ -32,3 +32,5 @@ project "ImVulkanApp"
     filter "configurations:Release"
         defines { "NDEBUG" }
         optimize "On"
+
+    filter {}

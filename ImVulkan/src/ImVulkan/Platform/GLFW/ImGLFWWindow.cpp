@@ -447,7 +447,8 @@ namespace ImVulkan
 				m_Swapchain.GetSwapchain(),
 				UINT64_MAX, m_AcquireSephamore.GetSemaphore(),
 				nullptr,
-				&imageIndex);
+				&imageIndex
+			);
 
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 			{
@@ -519,7 +520,15 @@ namespace ImVulkan
 		submitInfo.pWaitDstStageMask = &waitMask;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_ReleaseSephamore.GetSemaphore();
-		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetQueue(), 1, &submitInfo, m_Fence.GetFence()), "Could not submit queue");
+		VK_ASSERT(
+			vkQueueSubmit(
+				m_VulkanContext.GetQueue(), 
+				1, 
+				&submitInfo, 
+				m_Fence.GetFence()
+			), 
+			"Could not submit queue"
+		);
 
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
