@@ -11,11 +11,12 @@ namespace ImVulkan
 	public:
 		VulkanSwapchain() = default;
 		VulkanSwapchain(
-			VkDevice device, 
-			VkPhysicalDevice physicalDevice, 
-			uint32_t queueFamilyIndex, 
-			VkSurfaceKHR surface, 
-			VkImageUsageFlags usage, 
+			VkDevice device,
+			VkPhysicalDevice physicalDevice,
+			uint32_t queueFamilyIndex,
+			VkSurfaceKHR surface,
+			VkImageUsageFlags usage,
+			bool vSync,
 			VkSwapchainKHR oldSwapchain = nullptr
 		);
 

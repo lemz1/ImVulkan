@@ -7,6 +7,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+#include "ImVulkan/Event/KeyboardEvent.h"
+#include "ImVulkan/Event/MouseEvent.h"
+#include "ImVulkan/Event/WindowEvent.h"
+
 namespace ImVulkan
 {
 	Window* Window::Create(const WindowSpecification& spec)
@@ -16,26 +20,20 @@ namespace ImVulkan
 
 	ImGLFWWindow::ImGLFWWindow(const WindowSpecification& spec)
 	{
+		m_Data.title = spec.title;
+		m_Data.width = spec.width;
+		m_Data.height = spec.height;
+		m_Data.vSync = spec.vSync;
+		m_Data.minimized = false;
+		m_Data.eventCallback = nullptr;
+
 		glfwSetErrorCallback(ErrorCallback);
 		IMVK_ASSERT(!glfwInit(), "Could not initialize GLFW!");
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		m_WindowHandle = glfwCreateWindow(spec.width, spec.height, spec.title, nullptr, nullptr);
 
-		glfwSetWindowUserPointer(m_WindowHandle, &m_Minimized);
-
-		glfwSetWindowSizeCallback(m_WindowHandle, [](GLFWwindow* window, int width, int height)
-		{
-			bool& minimized = *(bool*)(glfwGetWindowUserPointer(window));
-			if (width == 0 || height == 0)
-			{
-				minimized = true;
-			}
-			else
-			{
-				minimized = false;
-			}
-		});
+		InitEventCallbacks();
 
 		IMVK_ASSERT(!glfwVulkanSupported(), "GLFW: Vulkan is not supported!");
 
@@ -74,7 +72,9 @@ namespace ImVulkan
 				m_VulkanContext.GetPhysicalDevice(),
 				m_VulkanContext.GetQueueFamilyIndex(),
 				m_Surface,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+				m_Data.vSync
+			);
 		}
 
 		{
@@ -403,45 +403,19 @@ namespace ImVulkan
 		return m_WindowHandle;
 	}
 
-	const char* ImGLFWWindow::GetTitle()
-	{
-		return m_Spec.title;
-	}
-
-	void ImGLFWWindow::SetTitle(const char* title)
-	{
-		m_Spec.title = title;
-	}
-
-	const uint32_t ImGLFWWindow::GetWidth()
-	{
-		return m_Spec.width;
-	}
-
-	const uint32_t ImGLFWWindow::GetHeight()
-	{
-		return m_Spec.height;
-	}
-
 	void ImGLFWWindow::Resize(uint32_t width, uint32_t height)
 	{
-		if (width == m_Spec.width && height == m_Spec.height)
+		if (m_Data.width == width && m_Data.height == height)
 		{
 			return;
 		}
 
-		m_Spec.width = width;
-		m_Spec.height = height;
-	}
+		m_Data.width = width;
+		m_Data.height = height;
 
-	const bool ImGLFWWindow::GetVSync() const
-	{
-		return m_Spec.vSync;
-	}
+		glfwSetWindowSize(m_WindowHandle, width, height);
 
-	void ImGLFWWindow::SetVSync(bool vSync)
-	{
-		m_Spec.vSync = vSync;
+		RecreateSwapchain();
 	}
 
 	void ImGLFWWindow::PollEvents()
@@ -456,7 +430,7 @@ namespace ImVulkan
 
 	void ImGLFWWindow::OnUpdate()
 	{
-		if (m_Minimized)
+		if (m_Data.minimized)
 		{
 			return;
 		}
@@ -567,6 +541,169 @@ namespace ImVulkan
 		}
 	}
 
+	void ImGLFWWindow::InitEventCallbacks()
+	{
+		glfwSetWindowUserPointer(m_WindowHandle, &m_Data);
+
+		glfwSetWindowCloseCallback(m_WindowHandle, [](GLFWwindow* window)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			WindowCloseEvent event;
+			data.eventCallback(event);
+		});
+
+		glfwSetWindowSizeCallback(m_WindowHandle, [](GLFWwindow* window, int32_t width, int32_t height)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			data.width = width;
+			data.height = height;
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			WindowResizeEvent event(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			data.eventCallback(event);
+		});
+
+		glfwSetWindowPosCallback(m_WindowHandle, [](GLFWwindow* window, int32_t xPos, int32_t yPos)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			WindowMovedEvent event(static_cast<uint32_t>(xPos), static_cast<uint32_t>(yPos));
+			data.eventCallback(event);
+		});
+
+		glfwSetWindowFocusCallback(m_WindowHandle, [](GLFWwindow* window, int32_t focused)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			WindowFocusEvent event(static_cast<bool>(focused));
+			data.eventCallback(event);
+		});
+
+		glfwSetKeyCallback(m_WindowHandle, [](GLFWwindow* window, int32_t key, int32_t scancode, int32_t action, int32_t mods)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			switch (action)
+			{
+				case GLFW_PRESS:
+				{
+					{
+						KeyPressedEvent event(key, false);
+						data.eventCallback(event);
+					}
+
+					{
+						KeyJustPressedEvent event(key);
+						data.eventCallback(event);
+					}
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					KeyReleasedEvent event(key);
+					data.eventCallback(event);
+					break;
+				}
+				case GLFW_REPEAT:
+				{
+					KeyPressedEvent event(key, true);
+					data.eventCallback(event);
+					break;
+				}
+			}
+		});
+
+		glfwSetCharCallback(m_WindowHandle, [](GLFWwindow* window, uint32_t keycode)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			KeyJustPressedEvent event(keycode);
+			data.eventCallback(event);
+		});
+
+		glfwSetMouseButtonCallback(m_WindowHandle, [](GLFWwindow* window, int32_t button, int32_t action, int32_t mods)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			switch (action)
+			{
+				case GLFW_PRESS:
+				{
+					MouseButtonPressedEvent event(button);
+					data.eventCallback(event);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					MouseButtonReleasedEvent event(button);
+					data.eventCallback(event);
+					break;
+				}
+			}
+		});
+
+		glfwSetScrollCallback(m_WindowHandle, [](GLFWwindow* window, double xScrollOffset, double yScrollOffset)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			MouseScrolledEvent event(static_cast<float>(xScrollOffset), static_cast<float>(yScrollOffset));
+			data.eventCallback(event);
+		});
+
+		glfwSetCursorPosCallback(m_WindowHandle, [](GLFWwindow* window, double xMousePos, double yMousePos)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			if (!data.eventCallback)
+			{
+				return;
+			}
+
+			MouseMovedEvent event(static_cast<float>(xMousePos), static_cast<float>(yMousePos));
+			data.eventCallback(event);
+		});
+	}
+
 	void ImGLFWWindow::RecreateSwapchain()
 	{
 		{ // Minimized Check
@@ -590,6 +727,7 @@ namespace ImVulkan
 				m_VulkanContext.GetQueueFamilyIndex(),
 				m_Surface,
 				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+				m_Data.vSync,
 				oldSwapchain);
 
 			{ // this is just the destroy function of VulkanSwapchain

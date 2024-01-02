@@ -9,6 +9,7 @@ namespace ImVulkan
 		uint32_t queueFamilyIndex, 
 		VkSurfaceKHR surface, 
 		VkImageUsageFlags usage, 
+		bool vSync, 
 		VkSwapchainKHR oldSwapchain
 	)
 	{
@@ -54,7 +55,7 @@ namespace ImVulkan
 		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+		createInfo.presentMode = vSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
 		if (oldSwapchain)
 		{
 			createInfo.oldSwapchain = oldSwapchain;
@@ -64,14 +65,38 @@ namespace ImVulkan
 		m_Width = surfaceCapabilities.currentExtent.width;
 		m_Height = surfaceCapabilities.currentExtent.height;
 
-		VK_ASSERT(vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_Swapchain), "failed at creating swapchain");
+		VK_ASSERT(
+			vkCreateSwapchainKHR(
+				device, 
+				&createInfo, 
+				nullptr, 
+				&m_Swapchain
+			), 
+			"failed at creating swapchain"
+		);
 
 		uint32_t numImages;
-		VK_ASSERT(vkGetSwapchainImagesKHR(device, m_Swapchain, &numImages, nullptr), "failed at swapchain images!");
+		VK_ASSERT(
+			vkGetSwapchainImagesKHR(
+				device, 
+				m_Swapchain, 
+				&numImages, 
+				nullptr
+			), 
+			"failed at swapchain images!"
+		);
 
 		m_Images.resize(numImages);
 
-		VK_ASSERT(vkGetSwapchainImagesKHR(device, m_Swapchain, &numImages, m_Images.data()), "failed at swapchain images!");
+		VK_ASSERT(
+			vkGetSwapchainImagesKHR(
+				device, 
+				m_Swapchain, 
+				&numImages, 
+				m_Images.data()
+			), 
+			"failed at swapchain images!"
+		);
 
 		m_ImageViews.resize(numImages);
 		for (uint32_t i = 0; i < numImages; i++)
@@ -83,7 +108,15 @@ namespace ImVulkan
 			createInfo.components = {};
 			createInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 
-			VK_ASSERT(vkCreateImageView(device, &createInfo, nullptr, &m_ImageViews[i]), "Could not create image views");
+			VK_ASSERT(
+				vkCreateImageView(
+					device, 
+					&createInfo, 
+					nullptr, 
+					&m_ImageViews[i]
+				), 
+				"Could not create image views"
+			);
 		}
 	}
 

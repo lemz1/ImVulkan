@@ -75,7 +75,15 @@ namespace ImVulkan
 			createInfo.subresourceRange.levelCount = 1;
 			createInfo.subresourceRange.layerCount = 1;
 
-			VK_ASSERT(vkCreateImageView(device, &createInfo, nullptr, &m_ImageView), "Could not create image view!");
+			VK_ASSERT(
+				vkCreateImageView(
+					device, 
+					&createInfo, 
+					nullptr, 
+					&m_ImageView
+				), 
+				"Could not create image view!"
+			);
 		}
 	}
 

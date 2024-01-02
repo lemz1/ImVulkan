@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <iostream>
+#include <functional>
 
 #define IMVK_INFO(message) std::cout << "\033[32m[" << __FILE__ << ":" << __LINE__ << "]: " << message << "\033[0m" << std::endl;
 #define IMVK_WARN(message) std::cout << "\033[33m[" << __FILE__ << ":" << __LINE__ << "]: " << message << "\033[0m" << std::endl;
@@ -25,6 +26,8 @@
 #define IMVK_ASSERT_INVERSE(condition, message) IMVK_ASSERT(!(condition), message)
 
 #define Flag(s) (1 << s)
+
+#define BindFunction(funcPtr, objPtr) std::bind(funcPtr, objPtr, std::placeholders::_1)
 
 template <typename T>
 decltype(auto) Move(T && arg)

@@ -10,6 +10,7 @@ namespace ImVulkan
 	Application::Application(const ApplicationSpecification& spec)
 	{
 		m_Window = Window::Create(spec.windowSpec);
+		m_Window->SetEventCallback(BindFunction(&Application::OnEvent, this));
 	}
 
 	Application::~Application()
@@ -40,5 +41,11 @@ namespace ImVulkan
 
 			m_Window->OnUpdate();
 		}
+	}
+
+	void Application::OnEvent(Event& event)
+	{
+		IMVK_INFO(event.ToString());
+		m_LayerStack.OnEvent(event);
 	}
 }

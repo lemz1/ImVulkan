@@ -45,4 +45,11 @@ namespace ImVulkan
 			layer->OnDraw();
 		}
 	}
+	void LayerStack::OnEvent(Event& event)
+	{
+		for (auto layer : m_Layers)
+		{
+			layer->OnEvent(event);
+		}
+	}
 }

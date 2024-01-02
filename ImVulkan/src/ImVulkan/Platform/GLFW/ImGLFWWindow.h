@@ -29,22 +29,27 @@ namespace ImVulkan
 
 		void* GetNativeWindow() override;
 
-		const char* GetTitle() override;
-		void SetTitle(const char* title) override;
+		const char* GetTitle() override { return m_Data.title; }
+		void SetTitle(const char* title) override { m_Data.title = title; glfwSetWindowTitle(m_WindowHandle, title); }
 
-		const uint32_t GetWidth() override;
-		const uint32_t GetHeight() override;
+		const uint32_t GetWidth() override { return m_Data.width; }
+		const uint32_t GetHeight() override { return m_Data.height; }
 
-		void Resize(uint32_t width, uint32_t height) override;
+		void Resize(
+			uint32_t width, 
+			uint32_t height
+		) override;
 
-		const bool GetVSync() const override;
-		void SetVSync(bool vSync) override;
+		const bool GetVSync() const override { return m_Data.vSync; }
+		void SetVSync(bool vSync) override { m_Data.vSync = vSync; RecreateSwapchain(); }
 
 		void PollEvents() override;
 
 		const bool ShouldClose() const override;
 
 		void OnUpdate() override;
+
+		void SetEventCallback(const EventCallback& callback) { m_Data.eventCallback = callback; }
 
 		const VulkanContext& GetVulkanContext() { return m_VulkanContext; }
 		const VkSurfaceKHR& GetSurface() { return m_Surface; }
@@ -53,6 +58,8 @@ namespace ImVulkan
 		const std::vector<VulkanFrameBuffer>& GetFrameBuffers() { return m_FrameBuffers; }
 		const VulkanPipeline& GetPipeline() { return m_VulkanPipeline; }
 	private:
+		void InitEventCallbacks();
+
 		void RecreateSwapchain();
 	private:
 		static void ErrorCallback(
@@ -60,8 +67,6 @@ namespace ImVulkan
 			const char* description
 		);
 	private:
-		WindowSpecification m_Spec;
-
 		GLFWwindow* m_WindowHandle;
 		VulkanContext m_VulkanContext;
 
@@ -84,7 +89,16 @@ namespace ImVulkan
 		VkDescriptorPool m_DescriptorPool;
 		VkDescriptorSetLayout m_DescriptorSetLayout;
 
-		bool m_Minimized = false;
+		struct WindowData
+		{
+			const char* title;
+			uint32_t width, height;
+			bool vSync;
+			bool minimized;
+			EventCallback eventCallback;
+		};
+
+		WindowData m_Data;
 	};
 }
 #endif

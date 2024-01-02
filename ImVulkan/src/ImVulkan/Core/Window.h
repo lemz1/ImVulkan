@@ -1,9 +1,13 @@
 #pragma once
 
+#include "ImVulkan/Event/Event.h"
+
 #include <stdint.h>
 
 namespace ImVulkan
 {
+	using EventCallback = std::function<void(Event&)>;
+
 	struct WindowSpecification
 	{
 		const char* title = "ImVulkan Application";
@@ -41,5 +45,7 @@ namespace ImVulkan
 
 		// swap buffers, etc.
 		virtual void OnUpdate() = 0;
+
+		virtual void SetEventCallback(const EventCallback& callback) = 0;
 	};
 }

@@ -21,6 +21,8 @@ namespace ImVulkan
 		void PushLayer(Layer* layer) { m_LayerStack.PushLayer(layer); }
 		void RemoveLayer(Layer* layer) { m_LayerStack.RemoveLayer(layer); }
 		const std::vector<Layer*>& GetLayers() const { return m_LayerStack.GetLayers(); }
+
+		void OnEvent(Event& event);
 	public:
 		static Application* s_Instance;
 	private:
