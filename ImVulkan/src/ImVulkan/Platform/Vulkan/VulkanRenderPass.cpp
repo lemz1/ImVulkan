@@ -29,7 +29,15 @@ namespace ImVulkan
 		createInfo.subpassCount = 1;
 		createInfo.pSubpasses = &subpass;
 
-		VK_ASSERT(vkCreateRenderPass(device, &createInfo, nullptr, &m_RenderPass), "Could not create render pass");
+		VK_ASSERT(
+			vkCreateRenderPass(
+				device, 
+				&createInfo, 
+				nullptr, 
+				&m_RenderPass
+			), 
+			"Could not create render pass"
+		);
 	}
 
 	VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& other) noexcept

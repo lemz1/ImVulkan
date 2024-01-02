@@ -35,7 +35,11 @@ namespace ImVulkan
 
 		double ElapsedNanoseconds()
 		{
-			return static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_StartTime).count());
+			return static_cast<double>(
+				std::chrono::duration_cast<std::chrono::nanoseconds>(
+					std::chrono::high_resolution_clock::now() - m_StartTime
+				).count()
+			);
 		}
 ;	private:
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_StartTime;

@@ -9,9 +9,21 @@ namespace ImVulkan
 	)
 	{
 		uint32_t layerPropertyCount;
-		VK_ASSERT(vkEnumerateInstanceLayerProperties(&layerPropertyCount, nullptr), "Error enumerating instance layer properties!");
+		VK_ASSERT(
+			vkEnumerateInstanceLayerProperties(
+				&layerPropertyCount, 
+				nullptr
+			), 
+			"Error enumerating instance layer properties!"
+		);
 		VkLayerProperties* layerProperties = new VkLayerProperties[layerPropertyCount];
-		VK_ASSERT(vkEnumerateInstanceLayerProperties(&layerPropertyCount, layerProperties), "Error enumerating instance layer properties!");
+		VK_ASSERT(
+			vkEnumerateInstanceLayerProperties(
+				&layerPropertyCount, 
+				layerProperties
+			), 
+			"Error enumerating instance layer properties!"
+		);
 
 		#ifdef VK_DEBUG_INFO
 		for (uint32_t i = 0; i < layerPropertyCount; i++)
@@ -49,7 +61,14 @@ namespace ImVulkan
 		createInfo.enabledExtensionCount = instanceExtensionCount;
 		createInfo.ppEnabledExtensionNames = instanceExtensions;
 
-		VK_ASSERT(vkCreateInstance(&createInfo, nullptr, &m_Instance), "Error creating Vulkan instance!");
+		VK_ASSERT(
+			vkCreateInstance(
+				&createInfo, 
+				nullptr, 
+				&m_Instance
+			), 
+			"Error creating Vulkan instance!"
+		);
 	}
 
 	VulkanInstance::VulkanInstance(VulkanInstance&& other) noexcept

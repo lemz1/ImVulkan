@@ -25,7 +25,15 @@ namespace ImVulkan
 			createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 			createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			VK_ASSERT(vkCreateImage(device, &createInfo, nullptr, &m_Image), "Could not create image");
+			VK_ASSERT(
+				vkCreateImage(
+					device, 
+					&createInfo, 
+					nullptr, 
+					&m_Image
+				), 
+				"Could not create image"
+			);
 		}
 
 		{
@@ -33,9 +41,29 @@ namespace ImVulkan
 			vkGetImageMemoryRequirements(device, m_Image, &memoryRequirements);
 			VkMemoryAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 			allocateInfo.allocationSize = memoryRequirements.size;
-			allocateInfo.memoryTypeIndex = VulkanMemory::FindMemoryType(physicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-			VK_ASSERT(vkAllocateMemory(device, &allocateInfo, nullptr, &m_Memory), "Could not allocate memory!");
-			VK_ASSERT(vkBindImageMemory(device, m_Image, m_Memory, 0), "Could not bind image memory!");
+			allocateInfo.memoryTypeIndex = VulkanMemory::FindMemoryType(
+				physicalDevice, 
+				memoryRequirements.memoryTypeBits, 
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			);
+			VK_ASSERT(
+				vkAllocateMemory(
+					device, 
+					&allocateInfo, 
+					nullptr, 
+					&m_Memory
+				), 
+				"Could not allocate memory!"
+			);
+			VK_ASSERT(
+				vkBindImageMemory(
+					device, 
+					m_Image, 
+					m_Memory, 
+					0
+				), 
+				"Could not bind image memory!"
+			);
 		}
 
 		{
@@ -81,7 +109,17 @@ namespace ImVulkan
 
 		{
 			void* mapped;
-			VK_ASSERT(vkMapMemory(device, stagingBuffer.GetMemory(), 0, dataSize, 0, &mapped), "Could not map memory!");
+			VK_ASSERT(
+				vkMapMemory(
+					device, 
+					stagingBuffer.GetMemory(), 
+					0, 
+					dataSize, 
+					0, 
+					&mapped
+				), 
+				"Could not map memory!"
+			);
 			memcpy(mapped, data, dataSize);
 			stagingBuffer.UnmapMemory(device);
 		}
@@ -89,9 +127,8 @@ namespace ImVulkan
 		VulkanCommandPool commandPool = VulkanCommandPool(device, queueFamilyIndex);
 		VulkanCommandBuffer commandBuffer = VulkanCommandBuffer(device, commandPool.GetCommandPool());
 
+		commandBuffer.BeginCommandBuffer();
 		{
-			commandBuffer.BeginCommandBuffer();
-
 			{
 				VkImageMemoryBarrier imageBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 				imageBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -125,7 +162,14 @@ namespace ImVulkan
 				region.imageSubresource.layerCount = 1;
 				region.imageExtent = { width, height, 1 };
 
-				vkCmdCopyBufferToImage(commandBuffer.GetCommandBuffer(), stagingBuffer.GetBuffer(), m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+				vkCmdCopyBufferToImage(
+					commandBuffer.GetCommandBuffer(), 
+					stagingBuffer.GetBuffer(), 
+					m_Image, 
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+					1, 
+					&region
+				);
 			}
 
 			{
@@ -154,15 +198,22 @@ namespace ImVulkan
 					&imageBarrier
 				);
 			}
-
-			commandBuffer.EndCommandBuffer();
 		}
+		commandBuffer.EndCommandBuffer();
 
 		{
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBuffer.GetCommandBuffer();
-			VK_ASSERT(vkQueueSubmit(queue, 1, &submitInfo, nullptr), "Could not submit queue!");
+			VK_ASSERT(
+				vkQueueSubmit(
+					queue, 
+					1, 
+					&submitInfo, 
+					nullptr
+				), 
+				"Could not submit queue!"
+			);
 			VK_ASSERT(vkQueueWaitIdle(queue), "Could not wait for queue!");
 		}
 

@@ -273,16 +273,21 @@ namespace ImVulkan
 			);
 		}
 
-		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
 		{
-			m_Fences[i] = VulkanFence(m_VulkanContext.GetDevice());
+			m_Fence = VulkanFence(m_VulkanContext.GetDevice());
+		}
 
-			m_AcquireSephamores[i] = VulkanSemaphore(m_VulkanContext.GetDevice());
-			m_ReleaseSephamores[i] = VulkanSemaphore(m_VulkanContext.GetDevice());
+		{
+			m_AcquireSephamore = VulkanSemaphore(m_VulkanContext.GetDevice());
+			m_ReleaseSephamore = VulkanSemaphore(m_VulkanContext.GetDevice());
+		}
 
-			m_CommandPools[i] = VulkanCommandPool(m_VulkanContext.GetDevice(), m_VulkanContext.GetQueueFamilyIndex());
+		{
+			m_CommandPool = VulkanCommandPool(m_VulkanContext.GetDevice(), m_VulkanContext.GetQueueFamilyIndex());
+		}
 
-			m_CommandBuffers[i] = VulkanCommandBuffer(m_VulkanContext.GetDevice(), m_CommandPools[i].GetCommandPool());
+		{
+			m_CommandBuffer = VulkanCommandBuffer(m_VulkanContext.GetDevice(), m_CommandPool.GetCommandPool());
 		}
 
 		{
@@ -343,38 +348,54 @@ namespace ImVulkan
 	{
 		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
 
-		m_IndexBuffer.Destroy(m_VulkanContext.GetDevice());
-		m_VertexBuffer.Destroy(m_VulkanContext.GetDevice());
-
-		vkDestroyDescriptorPool(m_VulkanContext.GetDevice(), m_DescriptorPool, nullptr);
-		vkDestroyDescriptorSetLayout(m_VulkanContext.GetDevice(), m_DescriptorSetLayout, nullptr);
-		vkDestroySampler(m_VulkanContext.GetDevice(), m_Sampler, nullptr);
-
-		m_Image.Destroy(m_VulkanContext.GetDevice());
-
-		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
 		{
-			m_AcquireSephamores[i].Destroy(m_VulkanContext.GetDevice());
-			m_ReleaseSephamores[i].Destroy(m_VulkanContext.GetDevice());
-			m_CommandPools[i].Destroy(m_VulkanContext.GetDevice());
-			m_Fences[i].Destroy(m_VulkanContext.GetDevice());
+			m_IndexBuffer.Destroy(m_VulkanContext.GetDevice());
+			m_VertexBuffer.Destroy(m_VulkanContext.GetDevice());
 		}
 
-		m_VulkanPipeline.Destroy(m_VulkanContext.GetDevice());
-		m_RenderPass.Destroy(m_VulkanContext.GetDevice());
-		m_Swapchain.Destroy(m_VulkanContext.GetDevice());
-		vkDestroySurfaceKHR(m_VulkanContext.GetInstance(), m_Surface, nullptr);
-
-		for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
 		{
-			m_FrameBuffers[i].Destroy(m_VulkanContext.GetDevice());
+			vkDestroyDescriptorPool(m_VulkanContext.GetDevice(), m_DescriptorPool, nullptr);
+			vkDestroyDescriptorSetLayout(m_VulkanContext.GetDevice(), m_DescriptorSetLayout, nullptr);
+			vkDestroySampler(m_VulkanContext.GetDevice(), m_Sampler, nullptr);
+
+			m_Image.Destroy(m_VulkanContext.GetDevice());
 		}
-		m_FrameBuffers.clear();
 
-		m_VulkanContext.Destroy();
 
-		glfwDestroyWindow(m_WindowHandle);
-		glfwTerminate();
+		{
+			m_AcquireSephamore.Destroy(m_VulkanContext.GetDevice());
+			m_ReleaseSephamore.Destroy(m_VulkanContext.GetDevice());
+			m_CommandPool.Destroy(m_VulkanContext.GetDevice());
+			m_Fence.Destroy(m_VulkanContext.GetDevice());
+		}
+
+		{
+			m_VulkanPipeline.Destroy(m_VulkanContext.GetDevice());
+		}
+
+		{
+			m_RenderPass.Destroy(m_VulkanContext.GetDevice());
+			m_Swapchain.Destroy(m_VulkanContext.GetDevice());
+			vkDestroySurfaceKHR(m_VulkanContext.GetInstance(), m_Surface, nullptr);
+		}
+
+
+		{
+			for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
+			{
+				m_FrameBuffers[i].Destroy(m_VulkanContext.GetDevice());
+			}
+			m_FrameBuffers.clear();
+		}
+
+		{
+			m_VulkanContext.Destroy();
+		}
+
+		{
+			glfwDestroyWindow(m_WindowHandle);
+			glfwTerminate();
+		}
 	}
 
 	void* ImGLFWWindow::GetNativeWindow()
@@ -440,19 +461,17 @@ namespace ImVulkan
 			return;
 		}
 
-		static uint32_t frameIndex;
-
-		m_Fences[frameIndex].Wait(m_VulkanContext.GetDevice());
+		m_Fence.Wait(m_VulkanContext.GetDevice());
 
 		uint32_t imageIndex;
 		{
 			// if acquire next image gets called when the window is minimized it will lead to a validation error
-			// only way to not make that happen is to return early when the window is minimized
+			// the only way to not make that happen is to return early when the window is minimized
 
 			VkResult result = vkAcquireNextImageKHR(
 				m_VulkanContext.GetDevice(),
 				m_Swapchain.GetSwapchain(),
-				UINT64_MAX, m_AcquireSephamores[frameIndex].GetSemaphore(),
+				UINT64_MAX, m_AcquireSephamore.GetSemaphore(),
 				nullptr,
 				&imageIndex);
 
@@ -463,25 +482,20 @@ namespace ImVulkan
 			}
 			else
 			{
-				m_Fences[frameIndex].Reset(m_VulkanContext.GetDevice());
+				m_Fence.Reset(m_VulkanContext.GetDevice());
 				VK_ASSERT(result, "Could not acquire next image")
 			}
 		}
 
-		m_CommandPools[frameIndex].Reset(m_VulkanContext.GetDevice());
+		m_CommandPool.Reset(m_VulkanContext.GetDevice());
 
+		m_CommandBuffer.BeginCommandBuffer();
 		{
-			VulkanCommandBuffer& commandBuffer = m_CommandBuffers[frameIndex];
-
-			{ // Begin CommandBuffer
-				commandBuffer.BeginCommandBuffer();
-			}
-
 			{ // Window Resize
 				VkViewport viewport = { 0.f, 0.f, (float)m_Swapchain.GetWidth(), (float)m_Swapchain.GetHeight() };
 				VkRect2D scissor = { {0, 0}, {m_Swapchain.GetWidth(), m_Swapchain.GetHeight()} };
-				commandBuffer.SetViewports(0, 1, &viewport);
-				commandBuffer.SetScissors(0, 1, &scissor);
+				m_CommandBuffer.SetViewports(0, 1, &viewport);
+				m_CommandBuffer.SetScissors(0, 1, &scissor);
 			}
 
 			{ // Begin RenderPass
@@ -493,19 +507,17 @@ namespace ImVulkan
 				beginInfo.clearValueCount = 1;
 				beginInfo.pClearValues = &clearValue;
 
-				commandBuffer.BeginRenderPass(&beginInfo);
-			}
-
-			{ // Binding Pipeline
-				commandBuffer.BindPipeline(m_VulkanPipeline.GetVulkanPipeline(), VK_PIPELINE_BIND_POINT_GRAPHICS);
+				m_CommandBuffer.BeginRenderPass(&beginInfo);
 			}
 
 			{ // Actual Rendering
+				m_CommandBuffer.BindPipeline(m_VulkanPipeline.GetVulkanPipeline(), VK_PIPELINE_BIND_POINT_GRAPHICS);
+
 				VkDeviceSize offset = 0;
-				commandBuffer.BindVertexBuffers(&m_VertexBuffer.GetBuffer(), 1);
-				commandBuffer.BindIndexBuffer(m_IndexBuffer.GetBuffer());
+				m_CommandBuffer.BindVertexBuffers(&m_VertexBuffer.GetBuffer(), 1);
+				m_CommandBuffer.BindIndexBuffer(m_IndexBuffer.GetBuffer());
 				vkCmdBindDescriptorSets(
-					commandBuffer.GetCommandBuffer(),
+					m_CommandBuffer.GetCommandBuffer(),
 					VK_PIPELINE_BIND_POINT_GRAPHICS,
 					m_VulkanPipeline.GetVulkanPipelineLayout(),
 					0,
@@ -515,35 +527,32 @@ namespace ImVulkan
 					nullptr
 				);
 
-				commandBuffer.DrawIndexed(6);
+				m_CommandBuffer.DrawIndexed(6);
 			}
 
 			{ // End RenderPass
-				commandBuffer.EndRenderPass();
-			}
-
-			{ // End CommandBuffer
-				commandBuffer.EndCommandBuffer();
+				m_CommandBuffer.EndRenderPass();
 			}
 		}
+		m_CommandBuffer.EndCommandBuffer();
 
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffers[frameIndex].GetCommandBuffer();
+		submitInfo.pCommandBuffers = &m_CommandBuffer.GetCommandBuffer();
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_AcquireSephamores[frameIndex].GetSemaphore();
+		submitInfo.pWaitSemaphores = &m_AcquireSephamore.GetSemaphore();
 		VkPipelineStageFlags waitMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		submitInfo.pWaitDstStageMask = &waitMask;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_ReleaseSephamores[frameIndex].GetSemaphore();
-		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetQueue(), 1, &submitInfo, m_Fences[frameIndex].GetFence()), "Could not submit queue");
+		submitInfo.pSignalSemaphores = &m_ReleaseSephamore.GetSemaphore();
+		VK_ASSERT(vkQueueSubmit(m_VulkanContext.GetQueue(), 1, &submitInfo, m_Fence.GetFence()), "Could not submit queue");
 
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_Swapchain.GetSwapchain();
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_ReleaseSephamores[frameIndex].GetSemaphore();
+		presentInfo.pWaitSemaphores = &m_ReleaseSephamore.GetSemaphore();
 		{
 			VkResult result = vkQueuePresentKHR(m_VulkanContext.GetQueue(), &presentInfo);
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
@@ -556,8 +565,6 @@ namespace ImVulkan
 				VK_ASSERT(result, "Could not queue present!");
 			}
 		}
-
-		frameIndex = (frameIndex + 1) % FRAMES_IN_FLIGHT;
 	}
 
 	void ImGLFWWindow::RecreateSwapchain()
@@ -619,11 +626,12 @@ namespace ImVulkan
 				);
 			}
 		}
-
-
 	}
 
-	void ImGLFWWindow::ErrorCallback(int error, const char* description)
+	void ImGLFWWindow::ErrorCallback(
+		int error, 
+		const char* description
+	)
 	{
 		fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 	}

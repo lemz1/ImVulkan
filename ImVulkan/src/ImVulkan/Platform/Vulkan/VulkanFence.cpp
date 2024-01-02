@@ -7,7 +7,14 @@ namespace ImVulkan
 	{
 		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 		createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-		VK_ASSERT(vkCreateFence(device, &createInfo, nullptr, &m_Fence), "Could not create fence!");
+		VK_ASSERT(
+			vkCreateFence(
+				device, 
+				&createInfo, 
+				nullptr, 
+				&m_Fence
+			), "Could not create fence!"
+		);
 	}
 
 	VulkanFence::VulkanFence(VulkanFence&& other) noexcept
@@ -35,11 +42,27 @@ namespace ImVulkan
 
 	void VulkanFence::Wait(VkDevice device) const
 	{
-		VK_ASSERT(vkWaitForFences(device, 1, &m_Fence, VK_TRUE, UINT64_MAX), "Could not wait for fence!");
+		VK_ASSERT(
+			vkWaitForFences(
+				device, 
+				1, 
+				&m_Fence, 
+				VK_TRUE, 
+				UINT64_MAX
+			), 
+			"Could not wait for fence!"
+		);
 	}
 
 	void VulkanFence::Reset(VkDevice device) const
 	{
-		VK_ASSERT(vkResetFences(device, 1, &m_Fence), "Could not reset fence!");
+		VK_ASSERT(
+			vkResetFences(
+				device, 
+				1, 
+				&m_Fence
+			), 
+			"Could not reset fence!"
+		);
 	}
 }

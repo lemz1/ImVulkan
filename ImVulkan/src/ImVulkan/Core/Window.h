@@ -27,7 +27,10 @@ namespace ImVulkan
 		virtual const uint32_t GetWidth() = 0;
 		virtual const uint32_t GetHeight() = 0;
 
-		virtual void Resize(uint32_t width, uint32_t height) = 0;
+		virtual void Resize(
+			uint32_t width, 
+			uint32_t height
+		) = 0;
 
 		virtual const bool GetVSync() const = 0;
 		virtual void SetVSync(bool vSync) = 0;

@@ -6,11 +6,25 @@ namespace ImVulkan
 	VulkanPhysicalDevice::VulkanPhysicalDevice(VkInstance instance)
 	{
 		uint32_t numDevices;
-		VK_ASSERT(vkEnumeratePhysicalDevices(instance, &numDevices, nullptr), "Error enumerating physical devices!");
+		VK_ASSERT(
+			vkEnumeratePhysicalDevices(
+				instance, 
+				&numDevices, 
+				nullptr
+			), 
+			"Error enumerating physical devices!"
+		);
 		IMVK_ASSERT(numDevices == 0, "Vulkan: Failed to find GPUs with Vulkan Support!");
 
 		VkPhysicalDevice* physicalDevices = new VkPhysicalDevice[numDevices];
-		VK_ASSERT(vkEnumeratePhysicalDevices(instance, &numDevices, physicalDevices), "Error enumerating physical devices!");
+		VK_ASSERT(
+			vkEnumeratePhysicalDevices(
+				instance, 
+				&numDevices, 
+				physicalDevices
+			), 
+			"Error enumerating physical devices!"
+		);
 
 		#ifdef VK_DEBUG_INFO
 		IMVK_INFO("Found " << numDevices << " GPU(s):");

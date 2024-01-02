@@ -46,7 +46,15 @@ namespace ImVulkan
 		createInfo.ppEnabledExtensionNames = deviceExtensions;
 		createInfo.pEnabledFeatures = &features;
 
-		VK_ASSERT(vkCreateDevice(physicalDevice, &createInfo, nullptr, &m_Device), "Failed to create logical device!");
+		VK_ASSERT(
+			vkCreateDevice(
+				physicalDevice, 
+				&createInfo, 
+				nullptr, 
+				&m_Device
+			), 
+			"Failed to create logical device!"
+		);
 
 		m_QueueFamilyIndex = graphicsQueueIndex;
 		vkGetDeviceQueue(m_Device, m_QueueFamilyIndex, 0, &m_Queue);

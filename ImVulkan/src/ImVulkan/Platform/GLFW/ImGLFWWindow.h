@@ -19,8 +19,6 @@
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
 #include "ImVulkan/Platform/Vulkan/VulkanImage.h"
 
-#define FRAMES_IN_FLIGHT 2
-
 namespace ImVulkan
 {
 	class ImGLFWWindow : public Window
@@ -47,10 +45,20 @@ namespace ImVulkan
 		const bool ShouldClose() const override;
 
 		void OnUpdate() override;
+
+		const VulkanContext& GetVulkanContext() { return m_VulkanContext; }
+		const VkSurfaceKHR& GetSurface() { return m_Surface; }
+		const VulkanSwapchain& GetSwapchain() { return m_Swapchain; }
+		const VulkanRenderPass& GetRenderPass() { return m_RenderPass; }
+		const std::vector<VulkanFrameBuffer>& GetFrameBuffers() { return m_FrameBuffers; }
+		const VulkanPipeline& GetPipeline() { return m_VulkanPipeline; }
 	private:
 		void RecreateSwapchain();
 	private:
-		static void ErrorCallback(int error, const char* description);
+		static void ErrorCallback(
+			int error, 
+			const char* description
+		);
 	private:
 		WindowSpecification m_Spec;
 
@@ -62,11 +70,11 @@ namespace ImVulkan
 		VulkanRenderPass m_RenderPass;
 		std::vector<VulkanFrameBuffer> m_FrameBuffers;
 		VulkanPipeline m_VulkanPipeline;
-		VulkanCommandBuffer m_CommandBuffers[FRAMES_IN_FLIGHT];
-		VulkanCommandPool m_CommandPools[FRAMES_IN_FLIGHT];
-		VulkanFence m_Fences[FRAMES_IN_FLIGHT];
-		VulkanSemaphore m_AcquireSephamores[FRAMES_IN_FLIGHT];
-		VulkanSemaphore m_ReleaseSephamores[FRAMES_IN_FLIGHT];
+		VulkanCommandBuffer m_CommandBuffer;
+		VulkanCommandPool m_CommandPool;
+		VulkanFence m_Fence;
+		VulkanSemaphore m_AcquireSephamore;
+		VulkanSemaphore m_ReleaseSephamore;
 		VulkanBuffer m_VertexBuffer;
 		VulkanBuffer m_IndexBuffer;
 		VulkanImage m_Image;

@@ -20,7 +20,15 @@ namespace ImVulkan
 							   | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
 		createInfo.pfnUserCallback = VulkanDebugMessenger::DebugCallback;
 
-		VK_ASSERT(VulkanDebugMessenger::CreateDebugMessenger(instance, &createInfo, nullptr, &m_DebugMessenger), "Could not create debug messenger!");
+		VK_ASSERT(
+			VulkanDebugMessenger::CreateDebugMessenger(
+				instance, 
+				&createInfo, 
+				nullptr, 
+				&m_DebugMessenger
+			), 
+			"Could not create debug messenger!"
+		);
 	}
 
 	VulkanDebugMessenger::VulkanDebugMessenger(VulkanDebugMessenger&& other) noexcept

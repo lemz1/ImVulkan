@@ -11,7 +11,15 @@ namespace ImVulkan
 		VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 		createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 		createInfo.queueFamilyIndex = queueFamilyIndex;
-		VK_ASSERT(vkCreateCommandPool(device, &createInfo, nullptr, &m_CommandPool), "Could not create command pool!");
+		VK_ASSERT(
+			vkCreateCommandPool(
+				device, 
+				&createInfo, 
+				nullptr, 
+				&m_CommandPool
+			), 
+			"Could not create command pool!"
+		);
 	}
 
 	VulkanCommandPool::VulkanCommandPool(VulkanCommandPool&& other) noexcept
@@ -39,6 +47,13 @@ namespace ImVulkan
 
 	void VulkanCommandPool::Reset(VkDevice device) const
 	{
-		VK_ASSERT(vkResetCommandPool(device, m_CommandPool, 0), "Could not reset command pool!");
+		VK_ASSERT(
+			vkResetCommandPool(
+				device, 
+				m_CommandPool, 
+				0
+			), 
+			"Could not reset command pool!"
+		);
 	}
 }

@@ -18,7 +18,15 @@ namespace ImVulkan
 		createInfo.width = width;
 		createInfo.height = height;
 		createInfo.layers = 1;
-		VK_ASSERT(vkCreateFramebuffer(device, &createInfo, nullptr, &m_FrameBuffer), "Could not create framebuffer");
+		VK_ASSERT(
+			vkCreateFramebuffer(
+				device, 
+				&createInfo, 
+				nullptr, 
+				&m_FrameBuffer
+			), 
+			"Could not create framebuffer"
+		);
 	}
 
 	VulkanFrameBuffer::VulkanFrameBuffer(VulkanFrameBuffer&& other) noexcept

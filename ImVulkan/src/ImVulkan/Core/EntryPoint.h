@@ -4,9 +4,15 @@
 
 namespace ImVulkan
 {
-	extern Application* CreateApplication(int argc, char** argv);
+	extern Application* CreateApplication(
+		int argc, 
+		char** argv
+	);
 
-	int Main(int argc, char** argv)
+	int Main(
+		int argc, 
+		char** argv
+	)
 	{
 		Application* app = CreateApplication(argc, argv);
 		app->Run();
@@ -15,7 +21,10 @@ namespace ImVulkan
 	}
 }
 
-int main(int argc, char** argv)
+int main(
+	int argc, 
+	char** argv
+)
 {
 	return ImVulkan::Main(argc, argv);
 }

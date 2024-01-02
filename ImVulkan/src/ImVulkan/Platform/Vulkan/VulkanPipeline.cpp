@@ -59,7 +59,15 @@ namespace ImVulkan
 			createInfo.setLayoutCount = numSetLayouts;
 			createInfo.pSetLayouts = setLayouts;
 
-			VK_ASSERT(vkCreatePipelineLayout(device, &createInfo, nullptr, &m_PipelineLayout), "Could not create pipeline layout!");
+			VK_ASSERT(
+				vkCreatePipelineLayout(
+					device, 
+					&createInfo, 
+					nullptr, 
+					&m_PipelineLayout
+				), 
+				"Could not create pipeline layout!"
+			);
 		}
 
 		{
@@ -77,7 +85,17 @@ namespace ImVulkan
 			createInfo.renderPass = renderPass;
 			createInfo.subpass = 0;
 
-			VK_ASSERT(vkCreateGraphicsPipelines(device, nullptr, 1, &createInfo, nullptr, &m_Pipeline), "Could not create graphics pipeline!");
+			VK_ASSERT(
+				vkCreateGraphicsPipelines(
+					device, 
+					nullptr, 
+					1, 
+					&createInfo, 
+					nullptr, 
+					&m_Pipeline
+				), 
+				"Could not create graphics pipeline!"
+			);
 		}
 
 		for (uint32_t i = 0; i < shaderStageCount; i++)
@@ -125,7 +143,15 @@ namespace ImVulkan
 		VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 		createInfo.codeSize = shaderCode.size();
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
-		VK_ASSERT(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule), "Could not create shader module!");
+		VK_ASSERT(
+			vkCreateShaderModule(
+				device, 
+				&createInfo, 
+				nullptr, 
+				&shaderModule
+			), 
+			"Could not create shader module!"
+		);
 		
 		return shaderModule;
 	}

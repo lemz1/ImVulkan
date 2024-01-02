@@ -6,7 +6,15 @@ namespace ImVulkan
 	VulkanSemaphore::VulkanSemaphore(VkDevice device)
 	{
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		VK_ASSERT(vkCreateSemaphore(device, &createInfo, nullptr, &m_Semaphore), "Could not create semaphore!");
+		VK_ASSERT(
+			vkCreateSemaphore(
+				device, 
+				&createInfo, 
+				nullptr, 
+				&m_Semaphore
+			), 
+			"Could not create semaphore!"
+		);
 	}
 
 	VulkanSemaphore::VulkanSemaphore(VulkanSemaphore&& other) noexcept

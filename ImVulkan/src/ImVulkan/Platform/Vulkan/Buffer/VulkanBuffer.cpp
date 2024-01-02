@@ -20,24 +20,55 @@ namespace ImVulkan
 			createInfo.size = size;
 			createInfo.usage = usage;
 
-			VK_ASSERT(vkCreateBuffer(device, &createInfo, nullptr, &m_Buffer), "Could not create vertex buffer!");
+			VK_ASSERT(
+				vkCreateBuffer(
+					device, 
+					&createInfo, 
+					nullptr, 
+					&m_Buffer), 
+				"Could not create vertex buffer!"
+			);
 		}
 
 		{
 			VkMemoryRequirements memoryRequirements;
-			vkGetBufferMemoryRequirements(device, m_Buffer, &memoryRequirements);
+			vkGetBufferMemoryRequirements(
+				device, 
+				m_Buffer, 
+				&memoryRequirements
+			);
 
-			uint32_t memoryIndex = VulkanMemory::FindMemoryType(physicalDevice, memoryRequirements.memoryTypeBits, memoryProperties);
+			uint32_t memoryIndex = VulkanMemory::FindMemoryType(
+				physicalDevice, 
+				memoryRequirements.memoryTypeBits, 
+				memoryProperties
+			);
 
 			VkMemoryAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 			allocateInfo.allocationSize = memoryRequirements.size;
 			allocateInfo.memoryTypeIndex = memoryIndex;
 
-			VK_ASSERT(vkAllocateMemory(device, &allocateInfo, nullptr, &m_Memory), "Could not allocate memory!");
+			VK_ASSERT(
+				vkAllocateMemory(
+					device, 
+					&allocateInfo, 
+					nullptr, 
+					&m_Memory
+				), 
+				"Could not allocate memory!"
+			);
 		}
 
 		{
-			VK_ASSERT(vkBindBufferMemory(device, m_Buffer, m_Memory, 0), "Could not bind buffer memory!");
+			VK_ASSERT(
+				vkBindBufferMemory(
+					device, 
+					m_Buffer, 
+					m_Memory, 
+					0
+				), 
+				"Could not bind buffer memory!"
+			);
 		}
 	}
 
@@ -78,12 +109,6 @@ namespace ImVulkan
 		VkDeviceSize dataSize
 	)
 	{
-		#if 0
-		void* mapped;
-		VK_ASSERT(vkMapMemory(device, stagingBuffer.m_Memory, 0, dataSize, 0, &mapped), "Could not map memory!");
-		memcpy(mapped, data, dataSize);
-		stagingBuffer.UnmapMemory(device);
-		#else
 		VulkanBuffer stagingBuffer = VulkanBuffer(
 			device, 
 			physicalDevice, 
@@ -94,7 +119,17 @@ namespace ImVulkan
 
 		{
 			void* mapped;
-			VK_ASSERT(vkMapMemory(device, stagingBuffer.m_Memory, 0, dataSize, 0, &mapped), "Could not map memory!");
+			VK_ASSERT(
+				vkMapMemory(
+					device, 
+					stagingBuffer.m_Memory, 
+					0, 
+					dataSize, 
+					0, 
+					&mapped
+				), 
+				"Could not map memory!"
+			);
 			memcpy(mapped, data, dataSize);
 			stagingBuffer.UnmapMemory(device);
 		}
@@ -106,7 +141,13 @@ namespace ImVulkan
 			commandBuffer.BeginCommandBuffer();
 
 			VkBufferCopy region = { 0, 0, dataSize };
-			vkCmdCopyBuffer(commandBuffer.GetCommandBuffer(), stagingBuffer.GetBuffer(), m_Buffer, 1, &region);
+			vkCmdCopyBuffer(
+				commandBuffer.GetCommandBuffer(), 
+				stagingBuffer.GetBuffer(), 
+				m_Buffer, 
+				1, 
+				&region
+			);
 
 			commandBuffer.EndCommandBuffer();
 		}
@@ -115,13 +156,20 @@ namespace ImVulkan
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBuffer.GetCommandBuffer();
-			VK_ASSERT(vkQueueSubmit(queue, 1, &submitInfo, nullptr), "Could not submit queue!");
+			VK_ASSERT(
+				vkQueueSubmit(
+					queue, 
+					1, 
+					&submitInfo, 
+					nullptr
+				), 
+				"Could not submit queue!"
+			);
 			VK_ASSERT(vkQueueWaitIdle(queue), "Could not wait for queue!");
 		}
 
 		commandPool.Destroy(device);
 		stagingBuffer.Destroy(device);
-		#endif
 	}
 
 	void VulkanBuffer::UnmapMemory(VkDevice device)
