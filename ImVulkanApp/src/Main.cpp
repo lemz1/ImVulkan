@@ -18,7 +18,7 @@ namespace ImVulkan
 		char** argv
 	)
 	{
-		ApplicationSpecification spec;
+		ApplicationSpecification spec = {};
 		Application* app = new Application(spec);
 		app->PushLayer(new ExampleLayer());
 		return app;
