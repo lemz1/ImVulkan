@@ -18,6 +18,7 @@
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanFrameBuffer.h"
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
 #include "ImVulkan/Platform/Vulkan/VulkanImage.h"
+#include "ImVulkan/Platform/GLFW/GLFWImGuiContext.h"
 
 namespace ImVulkan
 {
@@ -99,6 +100,8 @@ namespace ImVulkan
 		};
 
 		WindowData m_Data;
+
+		GLFWImGuiContext m_ImGuiContext;
 	};
 }
 #endif

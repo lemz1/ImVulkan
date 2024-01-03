@@ -30,12 +30,12 @@ namespace ImVulkan
 
 		void Destroy(VkDevice device);
 
-		const VkSwapchainKHR& GetSwapchain() { return m_Swapchain; }
+		const VkSwapchainKHR& GetSwapchain() const { return m_Swapchain; }
 		const VkFormat GetFormat() const { return m_Format; }
 		const uint32_t GetWidth() const { return m_Width; }
 		const uint32_t GetHeight() const { return m_Height; }
-		const std::vector<VkImage>& GetImages() { return m_Images; }
-		const std::vector<VkImageView>& GetImageViews() { return m_ImageViews; }
+		const std::vector<VkImage>& GetImages() const { return m_Images; }
+		const std::vector<VkImageView>& GetImageViews() const { return m_ImageViews; }
 	private:
 		VkSwapchainKHR m_Swapchain = nullptr;
 		uint32_t m_Width = 0, m_Height = 0;

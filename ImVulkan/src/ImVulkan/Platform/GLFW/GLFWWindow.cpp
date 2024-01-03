@@ -11,6 +11,10 @@
 #include "ImVulkan/Event/MouseEvent.h"
 #include "ImVulkan/Event/WindowEvent.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_vulkan.h"
+#include "backends/imgui_impl_glfw.h"
+
 namespace ImVulkan
 {
 	Window* Window::Create(const WindowSpecification& spec)
@@ -342,11 +346,26 @@ namespace ImVulkan
 				sizeof(indexData)
 			);
 		}
+
+		m_ImGuiContext = GLFWImGuiContext(
+			m_WindowHandle,
+			m_VulkanContext.GetInstance(),
+			m_VulkanContext.GetPhysicalDevice(),
+			m_VulkanContext.GetDevice(),
+			m_VulkanContext.GetQueueFamilyIndex(),
+			m_VulkanContext.GetQueue(),
+			m_Swapchain.GetImages().size(),
+			m_RenderPass.GetRenderPass()
+		);
 	}
 
 	GLFWWindow::~GLFWWindow()
 	{
 		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
+
+		{
+			m_ImGuiContext.Destroy(m_VulkanContext.GetDevice());
+		}
 
 		{
 			m_IndexBuffer.Destroy(m_VulkanContext.GetDevice());
@@ -435,6 +454,17 @@ namespace ImVulkan
 			return;
 		}
 
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
+		ImGui::ShowDemoWindow();
+
+		ImGui::Render();
+		ImDrawData* drawData = ImGui::GetDrawData();
+
 		m_Fence.Wait(m_VulkanContext.GetDevice());
 
 		uint32_t imageIndex;
@@ -504,6 +534,8 @@ namespace ImVulkan
 
 				m_CommandBuffer.DrawIndexed(6);
 			}
+
+			ImGui_ImplVulkan_RenderDrawData(drawData, m_CommandBuffer.GetCommandBuffer());
 
 			{ // End RenderPass
 				m_CommandBuffer.EndRenderPass();
