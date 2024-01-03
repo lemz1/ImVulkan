@@ -1,6 +1,6 @@
 #include "imvkpch.h"
 #ifdef IMVK_PLATFORM_GLFW
-#include "ImVulkan/Platform/GLFW/ImGLFWWindow.h"
+#include "ImVulkan/Platform/GLFW/GLFWWindow.h"
 
 #include "ImVulkan/Core/Core.h"
 
@@ -15,10 +15,10 @@ namespace ImVulkan
 {
 	Window* Window::Create(const WindowSpecification& spec)
 	{
-		return new ImGLFWWindow(spec);
+		return new GLFWWindow(spec);
 	}
 
-	ImGLFWWindow::ImGLFWWindow(const WindowSpecification& spec)
+	GLFWWindow::GLFWWindow(const WindowSpecification& spec)
 	{
 		m_Data.title = spec.title;
 		m_Data.width = spec.width;
@@ -344,7 +344,7 @@ namespace ImVulkan
 		}
 	}
 
-	ImGLFWWindow::~ImGLFWWindow()
+	GLFWWindow::~GLFWWindow()
 	{
 		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.GetDevice()), "Something went wrong when waiting on device idle!");
 
@@ -398,12 +398,12 @@ namespace ImVulkan
 		}
 	}
 
-	void* ImGLFWWindow::GetNativeWindow()
+	void* GLFWWindow::GetNativeWindow()
 	{
 		return m_WindowHandle;
 	}
 
-	void ImGLFWWindow::Resize(uint32_t width, uint32_t height)
+	void GLFWWindow::Resize(uint32_t width, uint32_t height)
 	{
 		if (m_Data.width == width && m_Data.height == height)
 		{
@@ -418,17 +418,17 @@ namespace ImVulkan
 		RecreateSwapchain();
 	}
 
-	void ImGLFWWindow::PollEvents()
+	void GLFWWindow::PollEvents()
 	{
 		glfwPollEvents();
 	}
 
-	const bool ImGLFWWindow::ShouldClose() const
+	const bool GLFWWindow::ShouldClose() const
 	{
 		return glfwWindowShouldClose(m_WindowHandle);
 	}
 
-	void ImGLFWWindow::OnUpdate()
+	void GLFWWindow::OnUpdate()
 	{
 		if (m_Data.minimized)
 		{
@@ -550,7 +550,7 @@ namespace ImVulkan
 		}
 	}
 
-	void ImGLFWWindow::InitEventCallbacks()
+	void GLFWWindow::InitEventCallbacks()
 	{
 		glfwSetWindowUserPointer(m_WindowHandle, &m_Data);
 
@@ -713,7 +713,7 @@ namespace ImVulkan
 		});
 	}
 
-	void ImGLFWWindow::RecreateSwapchain()
+	void GLFWWindow::RecreateSwapchain()
 	{
 		{ // Minimized Check
 			VkSurfaceCapabilitiesKHR surfaceCapabilites;
@@ -775,7 +775,7 @@ namespace ImVulkan
 		}
 	}
 
-	void ImGLFWWindow::ErrorCallback(
+	void GLFWWindow::ErrorCallback(
 		int error, 
 		const char* description
 	)

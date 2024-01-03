@@ -45,7 +45,6 @@ namespace ImVulkan
 
 	void Application::OnEvent(Event& event)
 	{
-		IMVK_INFO(event.ToString());
 		m_LayerStack.OnEvent(event);
 	}
 }

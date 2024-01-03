@@ -21,11 +21,11 @@
 
 namespace ImVulkan
 {
-	class ImGLFWWindow : public Window
+	class GLFWWindow : public Window
 	{
 	public:
-		ImGLFWWindow(const WindowSpecification& spec);
-		~ImGLFWWindow() override;
+		GLFWWindow(const WindowSpecification& spec);
+		~GLFWWindow() override;
 
 		void* GetNativeWindow() override;
 
