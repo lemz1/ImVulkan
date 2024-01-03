@@ -57,7 +57,6 @@ namespace ImVulkan
 		const VulkanSwapchain& GetSwapchain() { return m_Swapchain; }
 		const VulkanRenderPass& GetRenderPass() { return m_RenderPass; }
 		const std::vector<VulkanFrameBuffer>& GetFrameBuffers() { return m_FrameBuffers; }
-		const VulkanPipeline& GetPipeline() { return m_VulkanPipeline; }
 	private:
 		void InitEventCallbacks();
 
@@ -75,20 +74,11 @@ namespace ImVulkan
 		VulkanSwapchain m_Swapchain;
 		VulkanRenderPass m_RenderPass;
 		std::vector<VulkanFrameBuffer> m_FrameBuffers;
-		VulkanPipeline m_VulkanPipeline;
 		VulkanCommandBuffer m_CommandBuffer;
 		VulkanCommandPool m_CommandPool;
 		VulkanFence m_Fence;
 		VulkanSemaphore m_AcquireSephamore;
 		VulkanSemaphore m_ReleaseSephamore;
-		VulkanBuffer m_VertexBuffer;
-		VulkanBuffer m_IndexBuffer;
-		VulkanImage m_Image;
-
-		VkSampler m_Sampler;
-		VkDescriptorSet m_Descriptor;
-		VkDescriptorPool m_DescriptorPool;
-		VkDescriptorSetLayout m_DescriptorSetLayout;
 
 		struct WindowData
 		{
