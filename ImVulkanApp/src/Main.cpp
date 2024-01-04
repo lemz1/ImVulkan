@@ -24,7 +24,7 @@ namespace ImVulkan
 	)
 	{
 		ApplicationSpecification spec = {};
-		Application* app = new Application(spec);
+		Application* app = Application::Create(spec);
 		Application::PushLayer(new ExampleLayer());
 		return app;
 	}

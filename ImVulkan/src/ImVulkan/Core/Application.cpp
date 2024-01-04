@@ -7,12 +7,18 @@ namespace ImVulkan
 {
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const ApplicationSpecification& spec)
+	Application* Application::Create(const ApplicationSpecification& spec)
 	{
 		if (Application::s_Instance)
 		{
-			return;
+			return Application::s_Instance;
 		}
+
+		return new Application(spec);
+	}
+
+	Application::Application(const ApplicationSpecification& spec)
+	{
 
 		Application::s_Instance = this;
 
@@ -74,6 +80,8 @@ namespace ImVulkan
 		delete m_Window;
 
 		m_VulkanContext.Destroy();
+
+		Application::s_Instance = nullptr;
 	}
 
 	void Application::Run()

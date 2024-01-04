@@ -14,7 +14,7 @@ namespace ImVulkan
 	class Application
 	{
 	public:
-		Application(const ApplicationSpecification& spec);
+		static Application* Create(const ApplicationSpecification& spec);
 		~Application();
 
 		void Run();
@@ -29,7 +29,9 @@ namespace ImVulkan
 
 		static const Application* GetInstance() { return s_Instance; }
 	private:
-		VulkanContext m_VulkanContext; // creation is handled in window class
+		Application(const ApplicationSpecification& spec);
+	private:
+		VulkanContext m_VulkanContext;
 		Window* m_Window = nullptr;
 		LayerStack m_LayerStack;
 	private:
