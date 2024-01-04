@@ -19,11 +19,12 @@ namespace ImVulkan
 
 	Application::Application(const ApplicationSpecification& spec)
 	{
+		Time::Init();
 
 		Application::s_Instance = this;
 
+		#ifndef IMVK_HEADLESS
 		m_Window = Window::Create(spec.windowSpec);
-
 		{
 			uint32_t instanceExtensionCount = 0;
 			const char** instanceExtensions;
@@ -72,12 +73,22 @@ namespace ImVulkan
 		);
 
 		m_Window->SetEventCallback(BindFunction(&Application::OnEvent, this));
+		#else
+		m_VulkanContext = VulkanContext(
+			0,
+			nullptr,
+			0,
+			nullptr
+		);
+		#endif
 	}
 
 	Application::~Application()
 	{
+		#ifndef IMVK_HEADLESS
 		m_Window->Destroy(m_VulkanContext.GetInstance(), m_VulkanContext.GetDevice());
 		delete m_Window;
+		#endif
 
 		m_VulkanContext.Destroy();
 
@@ -94,15 +105,18 @@ namespace ImVulkan
 			const double deltaTime = newTime - time;
 			time = newTime;
 
+			#ifndef IMVK_HEADLESS
 			m_Window->PollEvents();
 
 			if (m_Window->ShouldClose())
 			{
 				break;
 			}
+			#endif
 
 			m_LayerStack.OnUpdate(deltaTime);
 
+			#ifndef IMVK_HEADLESS
 			m_LayerStack.OnDraw();
 
 			m_Window->BeginImGuiFrame();
@@ -118,11 +132,14 @@ namespace ImVulkan
 				m_VulkanContext.GetQueueFamilyIndex(),
 				m_VulkanContext.GetQueue()
 			);
+			#endif
 		}
 	}
 
 	void Application::OnEvent(Event& event)
 	{
+		#ifndef IMVK_HEADLESS
 		m_LayerStack.OnEvent(event);
+		#endif
 	}
 }

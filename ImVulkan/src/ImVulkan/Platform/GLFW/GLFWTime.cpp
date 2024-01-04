@@ -4,16 +4,18 @@
 
 #include <GLFW/glfw3.h>
 
-namespace ImVulkan::Time
+namespace ImVulkan 
 {
-	double GetTime()
+	void Time::Init() {}
+
+	double Time::GetTime()
 	{
 		return glfwGetTime();
 	}
 
-	uint64_t GetTimeMS()
+	double Time::GetTimeMS()
 	{
-		return static_cast<uint64_t>(glfwGetTime()) * 1000;
+		return glfwGetTime() * 1000;
 	}
 }
 #endif

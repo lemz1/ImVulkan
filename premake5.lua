@@ -26,6 +26,11 @@ workspace "ImVulkan"
 
     filter {}
 
+    --[[ uncomment this if you want to use headless
+        defines { "IMVK_HEADLESS" }
+    
+        removedefines { "IMVK_PLATFORM_GLFW" }
+    ]]
 
 include "ImVulkanExternal.lua"
 

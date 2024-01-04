@@ -2,8 +2,15 @@
 
 #include <stdint.h>
 
-namespace ImVulkan::Time
+namespace ImVulkan
 {
-	double GetTime();
-	uint64_t GetTimeMS();
+	class Time
+	{
+	public:
+		static void Init();
+
+		static double GetTime();
+
+		static double GetTimeMS();
+	};
 }
