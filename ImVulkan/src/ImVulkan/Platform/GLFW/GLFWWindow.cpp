@@ -235,7 +235,6 @@ namespace ImVulkan
 
 		m_Fence.Wait(device);
 
-		uint32_t imageIndex;
 		{
 			// if acquire next image gets called when the window is minimized it will lead to a validation error
 			// the only way to not make that happen is to return early when the window is minimized
@@ -245,7 +244,7 @@ namespace ImVulkan
 				m_Swapchain.GetSwapchain(),
 				UINT64_MAX, m_AcquireSephamore.GetSemaphore(),
 				nullptr,
-				&imageIndex
+				&m_ImageIndex
 			);
 
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
@@ -275,7 +274,7 @@ namespace ImVulkan
 				VkClearValue clearValue = { .1f, .1f, .1f, 1.f };
 				VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 				beginInfo.renderPass = m_RenderPass.GetRenderPass();
-				beginInfo.framebuffer = m_FrameBuffers[imageIndex].GetFrameBuffer();
+				beginInfo.framebuffer = m_FrameBuffers[m_ImageIndex].GetFrameBuffer();
 				beginInfo.renderArea = { {0, 0}, {m_Swapchain.GetWidth(), m_Swapchain.GetHeight()} };
 				beginInfo.clearValueCount = 1;
 				beginInfo.pClearValues = &clearValue;
@@ -313,7 +312,7 @@ namespace ImVulkan
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_Swapchain.GetSwapchain();
-		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pImageIndices = &m_ImageIndex;
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_ReleaseSephamore.GetSemaphore();
 		{

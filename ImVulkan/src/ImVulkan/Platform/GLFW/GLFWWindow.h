@@ -91,10 +91,13 @@ namespace ImVulkan
 
 		void SetEventCallback(const EventCallback& callback) { m_Data.eventCallback = callback; }
 
-		const VkSurfaceKHR& GetSurface() { return m_Surface; }
-		const VulkanSwapchain& GetSwapchain() { return m_Swapchain; }
-		const VulkanRenderPass& GetRenderPass() { return m_RenderPass; }
-		const std::vector<VulkanFrameBuffer>& GetFrameBuffers() { return m_FrameBuffers; }
+		const VkSurfaceKHR& GetSurface() const override { return m_Surface; }
+		const VkSwapchainKHR& GetSwapchain() const override { return m_Swapchain.GetSwapchain(); }
+		const VkImage& GetCurrentImage() const override { return m_Swapchain.GetImages()[m_ImageIndex]; }
+		const VkImageView& GetCurrentImageView() const override { return m_Swapchain.GetImageViews()[m_ImageIndex]; }
+
+		const VkRenderPass& GetRenderPass() const override { return m_RenderPass.GetRenderPass(); }
+		const VkFramebuffer& GetCurrentFrameBuffer() const override { return m_FrameBuffers[m_ImageIndex].GetFrameBuffer(); }
 	private:
 		void InitEventCallbacks();
 
@@ -125,6 +128,8 @@ namespace ImVulkan
 		VulkanFence m_Fence;
 		VulkanSemaphore m_AcquireSephamore;
 		VulkanSemaphore m_ReleaseSephamore;
+
+		uint32_t m_ImageIndex = 0;
 
 		struct WindowData
 		{

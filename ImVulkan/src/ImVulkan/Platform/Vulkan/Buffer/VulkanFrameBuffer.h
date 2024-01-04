@@ -26,7 +26,7 @@ namespace ImVulkan
 
 		void Destroy(VkDevice device);
 
-		const VkFramebuffer& GetFrameBuffer() { return m_FrameBuffer; }
+		const VkFramebuffer& GetFrameBuffer() const { return m_FrameBuffer; }
 	private:
 		VkFramebuffer m_FrameBuffer = nullptr;
 	};

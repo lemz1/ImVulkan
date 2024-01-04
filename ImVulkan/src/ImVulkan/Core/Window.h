@@ -89,5 +89,13 @@ namespace ImVulkan
 		) = 0;
 
 		virtual void SetEventCallback(const EventCallback& callback) = 0;
+
+		virtual const VkSurfaceKHR& GetSurface() const = 0;
+		virtual const VkSwapchainKHR& GetSwapchain() const = 0;
+		virtual const VkImage& GetCurrentImage() const = 0;
+		virtual const VkImageView& GetCurrentImageView() const = 0;
+
+		virtual const VkRenderPass& GetRenderPass() const = 0;
+		virtual const VkFramebuffer& GetCurrentFrameBuffer() const = 0;
 	};
 }
