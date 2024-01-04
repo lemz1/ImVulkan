@@ -45,6 +45,15 @@ namespace ImVulkan
 			layer->OnDraw();
 		}
 	}
+
+	void LayerStack::OnDrawImGui()
+	{
+		for (auto layer : m_Layers)
+		{
+			layer->OnDrawImGui();
+		}
+	}
+
 	void LayerStack::OnEvent(Event& event)
 	{
 		for (auto layer : m_Layers)

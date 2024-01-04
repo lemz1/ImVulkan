@@ -11,6 +11,11 @@ namespace ImVulkan
 			IMVK_WARN("Example Layer Create!");
 			IMVK_ERROR("Example Layer Create!");
 		}
+
+		void OnDrawImGui() override
+		{
+			ImGui::ShowDemoWindow();
+		}
 	};
 
 	Application* CreateApplication(
@@ -20,7 +25,7 @@ namespace ImVulkan
 	{
 		ApplicationSpecification spec = {};
 		Application* app = new Application(spec);
-		app->PushLayer(new ExampleLayer());
+		Application::PushLayer(new ExampleLayer());
 		return app;
 	}
 }

@@ -19,6 +19,8 @@ namespace ImVulkan
 
 		void OnDraw();
 
+		void OnDrawImGui();
+
 		void OnEvent(Event& event);
 
 		const std::vector<Layer*>& GetLayers() const { return m_Layers; }

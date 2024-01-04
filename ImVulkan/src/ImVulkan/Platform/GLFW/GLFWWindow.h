@@ -26,9 +26,31 @@ namespace ImVulkan
 	{
 	public:
 		GLFWWindow(const WindowSpecification& spec);
-		~GLFWWindow() override;
 
-		void* GetNativeWindow() override;
+		void Destroy(
+			VkInstance instance,
+			VkDevice device
+		) override;
+
+		void InitVulkan(
+			VkInstance instance,
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex,
+			VkQueue queue
+		) override;
+
+		void GetInstanceExtensions(
+			uint32_t& outInstanceExtensionCount,
+			const char**& outInstanceExtensions
+		) override;
+
+		void GetDeviceExtensions(
+			uint32_t& outDeviceExtensionCount,
+			const char**& outDeviceExtensions
+		) override;
+
+		void* GetNativeWindow() override { return m_WindowHandle; }
 
 		const char* GetTitle() override { return m_Data.title; }
 		void SetTitle(const char* title) override { m_Data.title = title; glfwSetWindowTitle(m_WindowHandle, title); }
@@ -38,21 +60,37 @@ namespace ImVulkan
 
 		void Resize(
 			uint32_t width, 
-			uint32_t height
+			uint32_t height,
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex
 		) override;
 
 		const bool GetVSync() const override { return m_Data.vSync; }
-		void SetVSync(bool vSync) override { m_Data.vSync = vSync; RecreateSwapchain(); }
+		void SetVSync(
+			bool vSync,
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex
+		) override { m_Data.vSync = vSync; RecreateSwapchain(physicalDevice, device, queueFamilyIndex); }
 
 		void PollEvents() override;
 
 		const bool ShouldClose() const override;
 
-		void OnUpdate() override;
+		void BeginImGuiFrame() override;
+		ImDrawData* EndImGuiFrame() override;
+
+		void SwapBuffers(
+			ImDrawData* imGuiDrawData,
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex,
+			VkQueue queue
+		) override;
 
 		void SetEventCallback(const EventCallback& callback) { m_Data.eventCallback = callback; }
 
-		const VulkanContext& GetVulkanContext() { return m_VulkanContext; }
 		const VkSurfaceKHR& GetSurface() { return m_Surface; }
 		const VulkanSwapchain& GetSwapchain() { return m_Swapchain; }
 		const VulkanRenderPass& GetRenderPass() { return m_RenderPass; }
@@ -60,15 +98,23 @@ namespace ImVulkan
 	private:
 		void InitEventCallbacks();
 
-		void RecreateSwapchain();
+		void RecreateSwapchain(
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex
+		);
 	private:
 		static void ErrorCallback(
 			int error, 
 			const char* description
 		);
 	private:
+		static uint32_t instanceExtensionCount;
+		static const char** instanceExtensions;
+		static uint32_t deviceExtensionCount;
+		static const char** deviceExtensions;
+	private:
 		GLFWwindow* m_WindowHandle;
-		VulkanContext m_VulkanContext;
 
 		VkSurfaceKHR m_Surface;
 		VulkanSwapchain m_Swapchain;

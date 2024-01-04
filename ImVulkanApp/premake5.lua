@@ -15,9 +15,11 @@ project "ImVulkanApp"
     {
         "src",
         "../ImVulkan/src",
-        "../vendor/glfw/glfw/include",
-        "../vendor/glm/glm",
-        "../vendor/imgui/imgui"
+        IncludeDir.glfw,
+        IncludeDir.glm,
+        IncludeDir.imgui,
+        IncludeDir.VulkanSDK,
+        IncludeDir.stb
     }
 
     links 

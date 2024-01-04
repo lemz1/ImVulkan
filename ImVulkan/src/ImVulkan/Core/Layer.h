@@ -14,6 +14,8 @@ namespace ImVulkan
 
 		virtual void OnDraw() {}
 
+		virtual void OnDrawImGui() {}
+
 		virtual void OnEvent(Event& event) {}
 	};
 }

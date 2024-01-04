@@ -6,17 +6,44 @@
 namespace ImVulkan 
 {
     VulkanContext::VulkanContext(
-        uint32_t instanceExtensionCount, 
-        const char** instanceExtensions, 
-        uint32_t deviceExtensionCount, 
+        uint32_t instanceExtensionCount,
+        const char** instanceExtensions,
+        uint32_t deviceExtensionCount,
         const char** deviceExtensions
     )
     {
-        m_Instance = VulkanInstance(instanceExtensionCount, instanceExtensions);
+        {
+            const char* additionalInstanceExtensions[] = {
+                VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+                VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME
+            };
+            uint32_t additionalInstanceExtensionCount = ARRAY_COUNT(additionalInstanceExtensions);
 
-        m_PhysicalDevice = VulkanPhysicalDevice(m_Instance.GetInstance());
+            uint32_t mergedInstanceExtensionCount = additionalInstanceExtensionCount + instanceExtensionCount;
+            const char** mergedInstanceExtensions = new const char* [mergedInstanceExtensionCount];
 
-        m_Device = VulkanDevice(m_PhysicalDevice.GetPhysicalDevice(), deviceExtensionCount, deviceExtensions);
+            memcpy(
+                mergedInstanceExtensions,
+                additionalInstanceExtensions,
+                additionalInstanceExtensionCount * sizeof(const char*)
+            );
+
+            memcpy(
+                mergedInstanceExtensions + additionalInstanceExtensionCount,
+                instanceExtensions,
+                instanceExtensionCount * sizeof(const char*)
+            );
+
+            m_Instance = VulkanInstance(mergedInstanceExtensionCount, mergedInstanceExtensions);
+        }
+
+        {
+            m_PhysicalDevice = VulkanPhysicalDevice(m_Instance.GetInstance());
+        }
+
+        {
+            m_Device = VulkanDevice(m_PhysicalDevice.GetPhysicalDevice(), deviceExtensionCount, deviceExtensions);
+        }
     }
 
     void VulkanContext::InitDebugMessenger()
