@@ -10,7 +10,7 @@ namespace ImVulkan
 	{
 	public:
 		LayerStack() = default;
-		~LayerStack();
+		void Destroy();
 
 		void PushLayer(Layer* layer);
 		void RemoveLayer(Layer* layer);

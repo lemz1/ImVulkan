@@ -3,10 +3,11 @@
 
 namespace ImVulkan
 {
-	LayerStack::~LayerStack()
+	void LayerStack::Destroy()
 	{
 		for (auto layer : m_Layers)
 		{
+			layer->OnDestroy();
 			delete layer;
 		}
 	}

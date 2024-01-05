@@ -52,11 +52,11 @@ namespace ImVulkan
 
 		void* GetNativeWindow() override { return m_WindowHandle; }
 
-		const char* GetTitle() override { return m_Data.title; }
+		const char* GetTitle() const override { return m_Data.title; }
 		void SetTitle(const char* title) override { m_Data.title = title; glfwSetWindowTitle(m_WindowHandle, title); }
 
-		const uint32_t GetWidth() override { return m_Data.width; }
-		const uint32_t GetHeight() override { return m_Data.height; }
+		const uint32_t GetWidth() const override { return m_Data.width; }
+		const uint32_t GetHeight() const override { return m_Data.height; }
 
 		void Resize(
 			uint32_t width, 
@@ -78,7 +78,7 @@ namespace ImVulkan
 
 		const bool ShouldClose() const override;
 
-		virtual const bool AcquireNextImage(
+		const bool AcquireNextImage(
 			VkPhysicalDevice physicalDevice,
 			VkDevice device,
 			uint32_t queueFamilyIndex
@@ -96,23 +96,28 @@ namespace ImVulkan
 			VkFence fence
 		) override;
 
+		void RecreateSwapchain(
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex
+		) override;
+
 		void SetEventCallback(const EventCallback& callback) { m_Data.eventCallback = callback; }
+		void SetRecreateSwapchain(const PFN_RecreateSwapchain& recreateSwapchain) { m_Data.recreateSwapchain = recreateSwapchain; }
 
 		const VkSurfaceKHR& GetSurface() const override { return m_Surface; }
 		const VkSwapchainKHR& GetSwapchain() const override { return m_Swapchain.GetSwapchain(); }
+		const uint32_t& GetCurrentImageIndex() const override { return m_ImageIndex; }
 		const VkImage& GetCurrentImage() const override { return m_Swapchain.GetImages()[m_ImageIndex]; }
 		const VkImageView& GetCurrentImageView() const override { return m_Swapchain.GetImageViews()[m_ImageIndex]; }
 
 		const VkRenderPass& GetRenderPass() const override { return m_RenderPass.GetRenderPass(); }
 		const VkFramebuffer& GetCurrentFrameBuffer() const override { return m_FrameBuffers[m_ImageIndex].GetFrameBuffer(); }
+
+		const VkSemaphore& GetSemaphore() const { return m_Semaphore.GetSemaphore(); };
 	private:
 		void InitEventCallbacks();
 
-		void RecreateSwapchain(
-			VkPhysicalDevice physicalDevice,
-			VkDevice device,
-			uint32_t queueFamilyIndex
-		);
 	private:
 		static void ErrorCallback(
 			int error, 
@@ -128,14 +133,11 @@ namespace ImVulkan
 
 		VkSurfaceKHR m_Surface;
 		VulkanSwapchain m_Swapchain;
+		uint32_t m_ImageIndex = 0;
 		VulkanRenderPass m_RenderPass;
 		std::vector<VulkanFrameBuffer> m_FrameBuffers;
-		VulkanCommandBuffer m_CommandBuffer;
-		VulkanCommandPool m_CommandPool;
-		VulkanSemaphore m_AcquireSephamore;
-		VulkanSemaphore m_ReleaseSephamore;
+		VulkanSemaphore m_Semaphore;
 
-		uint32_t m_ImageIndex = 0;
 
 		struct WindowData
 		{
@@ -144,6 +146,7 @@ namespace ImVulkan
 			bool vSync;
 			bool minimized;
 			EventCallback eventCallback;
+			PFN_RecreateSwapchain recreateSwapchain;
 		};
 
 		WindowData m_Data;

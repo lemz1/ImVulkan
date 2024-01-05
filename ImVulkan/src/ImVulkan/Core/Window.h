@@ -9,6 +9,7 @@
 namespace ImVulkan
 {
 	using EventCallback = std::function<void(Event&)>;
+	using PFN_RecreateSwapchain = std::function<void()>;
 
 	struct WindowSpecification
 	{
@@ -50,11 +51,11 @@ namespace ImVulkan
 		// pointer to HWND, GLFWwindow, etc.
 		virtual void* GetNativeWindow() = 0;
 
-		virtual const char* GetTitle() = 0;
+		virtual const char* GetTitle() const = 0;
 		virtual void SetTitle(const char* title) = 0;
 
-		virtual const uint32_t GetWidth() = 0;
-		virtual const uint32_t GetHeight() = 0;
+		virtual const uint32_t GetWidth() const = 0;
+		virtual const uint32_t GetHeight() const = 0;
 
 		virtual void Resize(
 			uint32_t width,
@@ -82,6 +83,7 @@ namespace ImVulkan
 			uint32_t queueFamilyIndex
 		) = 0;
 
+
 		virtual void BeginImGuiFrame() = 0;
 		virtual ImDrawData* EndImGuiFrame() = 0;
 
@@ -95,14 +97,24 @@ namespace ImVulkan
 			VkFence fence
 		) = 0;
 
+		virtual void RecreateSwapchain(
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex
+		) = 0;
+
 		virtual void SetEventCallback(const EventCallback& callback) = 0;
+		virtual void SetRecreateSwapchain(const PFN_RecreateSwapchain& recreateSwapchain) = 0;
 
 		virtual const VkSurfaceKHR& GetSurface() const = 0;
 		virtual const VkSwapchainKHR& GetSwapchain() const = 0;
+		virtual const uint32_t& GetCurrentImageIndex() const = 0;
 		virtual const VkImage& GetCurrentImage() const = 0;
 		virtual const VkImageView& GetCurrentImageView() const = 0;
 
 		virtual const VkRenderPass& GetRenderPass() const = 0;
 		virtual const VkFramebuffer& GetCurrentFrameBuffer() const = 0;
+
+		virtual const VkSemaphore& GetSemaphore() const = 0;
 	};
 }

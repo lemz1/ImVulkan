@@ -74,7 +74,19 @@ namespace ImVulkan
 			m_VulkanContext.GetQueue()
 		);
 
-		m_Window->SetEventCallback(BindFunction(&Application::OnEvent, this));
+		m_Window->SetEventCallback(
+			std::bind(
+				&Application::OnEvent, 
+				this, 
+				std::placeholders::_1
+			)
+		);
+		m_Window->SetRecreateSwapchain(
+			std::bind(
+				&Application::RecreateSwapchain, 
+				this
+			)
+		);
 		#else
 		m_VulkanContext = VulkanContext(
 			0,
@@ -92,6 +104,8 @@ namespace ImVulkan
 		delete m_Window;
 		#endif
 
+		m_LayerStack.Destroy();
+
 		m_VulkanContext.Destroy();
 
 		Application::s_Instance = nullptr;
@@ -99,6 +113,7 @@ namespace ImVulkan
 
 	void Application::Run()
 	{
+		m_IsRunning = true;
 		double time = 0;
 
 		while (true)
@@ -119,6 +134,16 @@ namespace ImVulkan
 			m_LayerStack.OnUpdate(deltaTime);
 
 			#ifndef IMVK_HEADLESS
+			if (!m_Window->AcquireNextImage(
+					m_VulkanContext.GetPhysicalDevice(), 
+					m_VulkanContext.GetDevice(), 
+					m_VulkanContext.GetQueueFamilyIndex()
+				)
+			)
+			{
+				continue;
+			}
+
 			VK_ASSERT(
 				vkWaitForFences(
 					m_VulkanContext.GetDevice(),
@@ -129,16 +154,6 @@ namespace ImVulkan
 				),
 				"Could not wait for fence!"
 			);
-
-			if (!m_Window->AcquireNextImage(
-					m_VulkanContext.GetPhysicalDevice(), 
-					m_VulkanContext.GetDevice(), 
-					m_VulkanContext.GetQueueFamilyIndex()
-				)
-			)
-			{
-				continue;
-			}
 
 			VK_ASSERT(
 				vkResetFences(
@@ -167,12 +182,25 @@ namespace ImVulkan
 			);
 			#endif
 		}
+
+		m_IsRunning = false;
 	}
 
 	void Application::OnEvent(Event& event)
 	{
 		#ifndef IMVK_HEADLESS
 		m_LayerStack.OnEvent(event);
+		#endif
+	}
+
+	void Application::RecreateSwapchain()
+	{
+		#ifndef IMVK_HEADLESS
+		m_Window->RecreateSwapchain(
+			m_VulkanContext.GetPhysicalDevice(),
+			m_VulkanContext.GetDevice(),
+			m_VulkanContext.GetQueueFamilyIndex()
+		);
 		#endif
 	}
 }

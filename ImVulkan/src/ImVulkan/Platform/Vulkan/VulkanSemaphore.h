@@ -20,7 +20,7 @@ namespace ImVulkan
 
 		void Destroy(VkDevice device);
 
-		const VkSemaphore& GetSemaphore() { return m_Semaphore; }
+		const VkSemaphore& GetSemaphore() const { return m_Semaphore; }
 	private:
 		VkSemaphore m_Semaphore = nullptr;
 	};

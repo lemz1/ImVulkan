@@ -27,8 +27,6 @@
 
 #define Flag(s) (1 << s)
 
-#define BindFunction(funcPtr, objPtr) std::bind(funcPtr, objPtr, std::placeholders::_1)
-
 template <typename T>
 decltype(auto) Move(T && arg)
 {

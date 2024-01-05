@@ -21,6 +21,8 @@ namespace ImVulkan
 
 		void OnEvent(Event& event);
 
+		void RecreateSwapchain();
+
 		static void PushLayer(Layer* layer) { s_Instance->m_LayerStack.PushLayer(layer); }
 		static void RemoveLayer(Layer* layer) { s_Instance->m_LayerStack.RemoveLayer(layer); }
 		static const std::vector<Layer*>& GetLayers() { return s_Instance->m_LayerStack.GetLayers(); }
@@ -28,12 +30,16 @@ namespace ImVulkan
 		static const Window* GetWindow() { return s_Instance->m_Window; }
 
 		static const Application* GetInstance() { return s_Instance; }
+
+		static const VulkanContext& GetVulkanContext() { return s_Instance->m_VulkanContext; }
 	private:
 		Application(const ApplicationSpecification& spec);
 	private:
 		VulkanContext m_VulkanContext;
 		Window* m_Window = nullptr;
 		LayerStack m_LayerStack;
+
+		bool m_IsRunning;
 	private:
 		static Application* s_Instance;
 	};
