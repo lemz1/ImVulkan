@@ -24,7 +24,7 @@ namespace ImVulkan
 
 		void Reset(VkDevice device) const;
 
-		const VkFence& GetFence() { return m_Fence; }
+		const VkFence& GetFence() const { return m_Fence; }
 	private:
 		VkFence m_Fence = nullptr;
 	};

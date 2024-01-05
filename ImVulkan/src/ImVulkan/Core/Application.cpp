@@ -101,9 +101,16 @@ namespace ImVulkan
 
 		while (true)
 		{
-			const double newTime = Time::GetTime();
-			const double deltaTime = newTime - time;
-			time = newTime;
+			VK_ASSERT(
+				vkWaitForFences(
+					m_VulkanContext.GetDevice(), 
+					1,
+					&m_VulkanContext.GetFence(),
+					VK_TRUE,
+					UINT64_MAX
+				),
+				"Could not wait for fence!"
+			);
 
 			#ifndef IMVK_HEADLESS
 			m_Window->PollEvents();
@@ -112,7 +119,30 @@ namespace ImVulkan
 			{
 				break;
 			}
+
+			if (!m_Window->AcquireNextImage(
+					m_VulkanContext.GetPhysicalDevice(), 
+					m_VulkanContext.GetDevice(), 
+					m_VulkanContext.GetQueueFamilyIndex()
+				)
+			)
+			{
+				continue;
+			}
 			#endif
+
+			VK_ASSERT(
+				vkResetFences(
+					m_VulkanContext.GetDevice(),
+					1,
+					&m_VulkanContext.GetFence()
+				),
+				"Could not reset fence!"
+			);
+
+			const double newTime = Time::GetTime();
+			const double deltaTime = newTime - time;
+			time = newTime;
 
 			m_LayerStack.OnUpdate(deltaTime);
 
@@ -130,7 +160,8 @@ namespace ImVulkan
 				m_VulkanContext.GetPhysicalDevice(),
 				m_VulkanContext.GetDevice(),
 				m_VulkanContext.GetQueueFamilyIndex(),
-				m_VulkanContext.GetQueue()
+				m_VulkanContext.GetQueue(),
+				m_VulkanContext.GetFence()
 			);
 			#endif
 		}

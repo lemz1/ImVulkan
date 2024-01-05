@@ -78,6 +78,12 @@ namespace ImVulkan
 
 		const bool ShouldClose() const override;
 
+		virtual const bool AcquireNextImage(
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex
+		) override;
+
 		void BeginImGuiFrame() override;
 		ImDrawData* EndImGuiFrame() override;
 
@@ -86,7 +92,8 @@ namespace ImVulkan
 			VkPhysicalDevice physicalDevice,
 			VkDevice device,
 			uint32_t queueFamilyIndex,
-			VkQueue queue
+			VkQueue queue,
+			VkFence fence
 		) override;
 
 		void SetEventCallback(const EventCallback& callback) { m_Data.eventCallback = callback; }
@@ -125,7 +132,6 @@ namespace ImVulkan
 		std::vector<VulkanFrameBuffer> m_FrameBuffers;
 		VulkanCommandBuffer m_CommandBuffer;
 		VulkanCommandPool m_CommandPool;
-		VulkanFence m_Fence;
 		VulkanSemaphore m_AcquireSephamore;
 		VulkanSemaphore m_ReleaseSephamore;
 

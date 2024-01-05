@@ -44,6 +44,10 @@ namespace ImVulkan
         {
             m_Device = VulkanDevice(m_PhysicalDevice.GetPhysicalDevice(), deviceExtensionCount, deviceExtensions);
         }
+
+        {
+            m_Fence = VulkanFence(m_Device.GetDevice());
+        }
     }
 
     void VulkanContext::InitDebugMessenger()
@@ -57,6 +61,8 @@ namespace ImVulkan
         {
             m_DebugMessenger.Destroy(m_Instance.GetInstance());
         }
+
+        m_Fence.Destroy(m_Device.GetDevice());
 
         m_Device.Destroy();
 

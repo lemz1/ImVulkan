@@ -57,7 +57,6 @@ namespace ImVulkan
 			m_AcquireSephamore.Destroy(device);
 			m_ReleaseSephamore.Destroy(device);
 			m_CommandPool.Destroy(device);
-			m_Fence.Destroy(device);
 		}
 
 		{
@@ -111,10 +110,6 @@ namespace ImVulkan
 				m_Swapchain.GetWidth(),
 				m_Swapchain.GetHeight()
 			);
-		}
-
-		{
-			m_Fence = VulkanFence(device);
 		}
 
 		{
@@ -206,34 +201,16 @@ namespace ImVulkan
 		return glfwWindowShouldClose(m_WindowHandle);
 	}
 
-	void GLFWWindow::BeginImGuiFrame()
-	{
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-	}
-
-	ImDrawData* GLFWWindow::EndImGuiFrame()
-	{
-		ImGui::Render();
-		return ImGui::GetDrawData();
-	}
-
-	void GLFWWindow::SwapBuffers(
-		ImDrawData* imGuiDrawData, 
+	const bool GLFWWindow::AcquireNextImage(
 		VkPhysicalDevice physicalDevice,
-		VkDevice device, 
-		uint32_t queueFamilyIndex, 
-		VkQueue queue
+		VkDevice device,
+		uint32_t queueFamilyIndex
 	)
 	{
 		if (m_Data.minimized)
 		{
-			return;
+			return false;
 		}
-
-		m_Fence.Wait(device);
 
 		{
 			// if acquire next image gets called when the window is minimized it will lead to a validation error
@@ -250,15 +227,40 @@ namespace ImVulkan
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 			{
 				RecreateSwapchain(physicalDevice, device, queueFamilyIndex);
-				return;
+				return false;
 			}
 			else
 			{
-				m_Fence.Reset(device);
 				VK_ASSERT(result, "Could not acquire next image")
 			}
 		}
 
+		return true;
+	}
+
+	void GLFWWindow::BeginImGuiFrame()
+	{
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+	}
+
+	ImDrawData* GLFWWindow::EndImGuiFrame()
+	{
+		ImGui::Render();
+		return ImGui::GetDrawData();
+	}
+
+	void GLFWWindow::SwapBuffers(
+		ImDrawData* imGuiDrawData,
+		VkPhysicalDevice physicalDevice,
+		VkDevice device,
+		uint32_t queueFamilyIndex,
+		VkQueue queue,
+		VkFence fence
+	)
+	{
 		m_CommandPool.Reset(device);
 
 		m_CommandBuffer.BeginCommandBuffer();
@@ -282,7 +284,9 @@ namespace ImVulkan
 				m_CommandBuffer.BeginRenderPass(&beginInfo);
 			}
 
-			ImGui_ImplVulkan_RenderDrawData(imGuiDrawData, m_CommandBuffer.GetCommandBuffer());
+			{
+				ImGui_ImplVulkan_RenderDrawData(imGuiDrawData, m_CommandBuffer.GetCommandBuffer());
+			}
 
 			{ // End RenderPass
 				m_CommandBuffer.EndRenderPass();
@@ -304,7 +308,7 @@ namespace ImVulkan
 				queue, 
 				1, 
 				&submitInfo, 
-				m_Fence.GetFence()
+				fence
 			), 
 			"Could not submit queue"
 		);

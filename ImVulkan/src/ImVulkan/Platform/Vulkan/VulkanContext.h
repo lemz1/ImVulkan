@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ImVulkan/Platform/Vulkan/VulkanCore.h"
+#include "ImVulkan/Platform/Vulkan/VulkanFence.h"
 #include "ImVulkan/Platform/Vulkan/VulkanDevice.h"
 #include "ImVulkan/Platform/Vulkan/VulkanInstance.h"
 #include "ImVulkan/Platform/Vulkan/VulkanPhysicalDevice.h"
@@ -31,10 +32,13 @@ namespace ImVulkan
 		const VkDevice& GetDevice() const { return m_Device.GetDevice(); }
 		const VkQueue& GetQueue() const { return m_Device.GetQueue(); }
 		const uint32_t GetQueueFamilyIndex() const { return m_Device.GetQueueFamilyIndex(); }
+
+		const VkFence& GetFence() const { return m_Fence.GetFence(); }
 	private:
 		VulkanInstance m_Instance;
 		VulkanPhysicalDevice m_PhysicalDevice;
 		VulkanDevice m_Device;
+		VulkanFence m_Fence;
 		
 		VulkanDebugMessenger m_DebugMessenger;
 	};

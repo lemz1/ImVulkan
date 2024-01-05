@@ -76,6 +76,12 @@ namespace ImVulkan
 
 		virtual const bool ShouldClose() const = 0;
 
+		virtual const bool AcquireNextImage(
+			VkPhysicalDevice physicalDevice,
+			VkDevice device,
+			uint32_t queueFamilyIndex
+		) = 0;
+
 		virtual void BeginImGuiFrame() = 0;
 		virtual ImDrawData* EndImGuiFrame() = 0;
 
@@ -85,7 +91,8 @@ namespace ImVulkan
 			VkPhysicalDevice physicalDevice,
 			VkDevice device,
 			uint32_t queueFamilyIndex,
-			VkQueue queue
+			VkQueue queue,
+			VkFence fence
 		) = 0;
 
 		virtual void SetEventCallback(const EventCallback& callback) = 0;
