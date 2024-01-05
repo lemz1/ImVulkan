@@ -100,7 +100,6 @@ namespace ImVulkan
 	void Application::Run()
 	{
 		double time = 0;
-		double deltaTime = 0;
 
 		while (true)
 		{
@@ -114,7 +113,7 @@ namespace ImVulkan
 			#endif
 
 			const double newTime = Time::GetTime();
-			deltaTime += newTime - time;
+			const double deltaTime = newTime - time;
 			time = newTime;
 
 			m_LayerStack.OnUpdate(deltaTime);
@@ -169,8 +168,6 @@ namespace ImVulkan
 				m_VulkanContext.GetFence()
 			);
 			#endif
-
-			deltaTime = 0;
 		}
 	}
 
