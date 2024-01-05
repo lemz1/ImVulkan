@@ -118,6 +118,7 @@ namespace ImVulkan
 
 			m_LayerStack.OnUpdate(deltaTime);
 
+			#ifndef IMVK_HEADLESS
 			VK_ASSERT(
 				vkWaitForFences(
 					m_VulkanContext.GetDevice(),
@@ -129,7 +130,6 @@ namespace ImVulkan
 				"Could not wait for fence!"
 			);
 
-			#ifndef IMVK_HEADLESS
 			if (!m_Window->AcquireNextImage(
 					m_VulkanContext.GetPhysicalDevice(), 
 					m_VulkanContext.GetDevice(), 
@@ -139,7 +139,6 @@ namespace ImVulkan
 			{
 				continue;
 			}
-			#endif
 
 			VK_ASSERT(
 				vkResetFences(
@@ -150,7 +149,6 @@ namespace ImVulkan
 				"Could not reset fence!"
 			);
 
-			#ifndef IMVK_HEADLESS
 			m_LayerStack.OnDraw();
 
 			m_Window->BeginImGuiFrame();
