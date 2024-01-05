@@ -355,6 +355,15 @@ namespace ImVulkan
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			data.width = width;
 			data.height = height;
+			
+			if (width == 0 && height == 0)
+			{
+				data.minimized = true;
+			}
+			else
+			{
+				data.minimized = false;
+			}
 
 			if (!data.eventCallback)
 			{

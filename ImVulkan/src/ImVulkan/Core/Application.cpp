@@ -61,6 +61,8 @@ namespace ImVulkan
 				deviceExtensions
 			);
 
+			m_VulkanContext.InitDebugMessenger();
+
 			delete[] mergedInstanceExtensions;
 		}
 
@@ -98,12 +100,28 @@ namespace ImVulkan
 	void Application::Run()
 	{
 		double time = 0;
+		double deltaTime = 0;
 
 		while (true)
 		{
+			#ifndef IMVK_HEADLESS
+			m_Window->PollEvents();
+
+			if (m_Window->ShouldClose())
+			{
+				break;
+			}
+			#endif
+
+			const double newTime = Time::GetTime();
+			deltaTime += newTime - time;
+			time = newTime;
+
+			m_LayerStack.OnUpdate(deltaTime);
+
 			VK_ASSERT(
 				vkWaitForFences(
-					m_VulkanContext.GetDevice(), 
+					m_VulkanContext.GetDevice(),
 					1,
 					&m_VulkanContext.GetFence(),
 					VK_TRUE,
@@ -113,13 +131,6 @@ namespace ImVulkan
 			);
 
 			#ifndef IMVK_HEADLESS
-			m_Window->PollEvents();
-
-			if (m_Window->ShouldClose())
-			{
-				break;
-			}
-
 			if (!m_Window->AcquireNextImage(
 					m_VulkanContext.GetPhysicalDevice(), 
 					m_VulkanContext.GetDevice(), 
@@ -140,12 +151,6 @@ namespace ImVulkan
 				"Could not reset fence!"
 			);
 
-			const double newTime = Time::GetTime();
-			const double deltaTime = newTime - time;
-			time = newTime;
-
-			m_LayerStack.OnUpdate(deltaTime);
-
 			#ifndef IMVK_HEADLESS
 			m_LayerStack.OnDraw();
 
@@ -164,6 +169,8 @@ namespace ImVulkan
 				m_VulkanContext.GetFence()
 			);
 			#endif
+
+			deltaTime = 0;
 		}
 	}
 
