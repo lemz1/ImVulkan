@@ -2,20 +2,21 @@
 #include "ImVulkan/Platform/Vulkan/VulkanPipeline.h"
 #include "ImVulkan/Util/AssetManager.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanPipeline
 {
-	VulkanPipeline::VulkanPipeline(
+	VkPipeline Create(
 		VkDevice device, 
 		uint32_t shaderStageCount, 
 		VkPipelineShaderStageCreateInfo* shaderStages, 
 		VkRenderPass renderPass, 
-		VkVertexInputAttributeDescription* attributeDescriptions, 
 		uint32_t numAttributeDescriptions, 
-		VkVertexInputBindingDescription* bindingDescription,
-		uint32_t numSetLayouts,
-		VkDescriptorSetLayout* setLayouts
+		VkVertexInputAttributeDescription* attributeDescriptions, 
+		VkVertexInputBindingDescription* bindingDescription, 
+		VkPipelineLayout pipelineLayout
 	)
 	{
+		VkPipeline pipeline = nullptr;
+
 		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 		vertexInputState.vertexBindingDescriptionCount = bindingDescription ? 1 : 0;
 		vertexInputState.pVertexBindingDescriptions = bindingDescription;
@@ -54,105 +55,32 @@ namespace ImVulkan
 		dynamicState.dynamicStateCount = ARRAY_COUNT(dynamicStates);
 		dynamicState.pDynamicStates = dynamicStates;
 
-		{
-			VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-			createInfo.setLayoutCount = numSetLayouts;
-			createInfo.pSetLayouts = setLayouts;
+		VkGraphicsPipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+		createInfo.stageCount = shaderStageCount;
+		createInfo.pStages = shaderStages;
+		createInfo.pVertexInputState = &vertexInputState;
+		createInfo.pInputAssemblyState = &inputAssemblyState;
+		createInfo.pViewportState = &viewportState;
+		createInfo.pRasterizationState = &rasterizationState;
+		createInfo.pMultisampleState = &multisampleState;
+		createInfo.pColorBlendState = &colorBlendState;
+		createInfo.pDynamicState = &dynamicState;
+		createInfo.layout = pipelineLayout;
+		createInfo.renderPass = renderPass;
+		createInfo.subpass = 0;
 
-			VK_ASSERT(
-				vkCreatePipelineLayout(
-					device, 
-					&createInfo, 
-					nullptr, 
-					&m_PipelineLayout
-				), 
-				"Could not create pipeline layout!"
-			);
-		}
-
-		{
-			VkGraphicsPipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-			createInfo.stageCount = shaderStageCount;
-			createInfo.pStages = shaderStages;
-			createInfo.pVertexInputState = &vertexInputState;
-			createInfo.pInputAssemblyState = &inputAssemblyState;
-			createInfo.pViewportState = &viewportState;
-			createInfo.pRasterizationState = &rasterizationState;
-			createInfo.pMultisampleState = &multisampleState;
-			createInfo.pColorBlendState = &colorBlendState;
-			createInfo.pDynamicState = &dynamicState;
-			createInfo.layout = m_PipelineLayout;
-			createInfo.renderPass = renderPass;
-			createInfo.subpass = 0;
-
-			VK_ASSERT(
-				vkCreateGraphicsPipelines(
-					device, 
-					nullptr, 
-					1, 
-					&createInfo, 
-					nullptr, 
-					&m_Pipeline
-				), 
-				"Could not create graphics pipeline!"
-			);
-		}
-
-		for (uint32_t i = 0; i < shaderStageCount; i++)
-		{
-			vkDestroyShaderModule(device, shaderStages[i].module, nullptr);
-		}
-	}
-
-	VulkanPipeline::VulkanPipeline(VulkanPipeline&& other) noexcept
-		: m_Pipeline(other.m_Pipeline), m_PipelineLayout(other.m_PipelineLayout)
-	{
-		other.m_Pipeline = nullptr;
-		other.m_PipelineLayout = nullptr;
-	}
-
-	VulkanPipeline& VulkanPipeline::operator=(VulkanPipeline&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_Pipeline = other.m_Pipeline;
-			m_PipelineLayout = other.m_PipelineLayout;
-
-			other.m_Pipeline = nullptr;
-			other.m_PipelineLayout = nullptr;
-		}
-
-		return *this;
-	}
-
-	void VulkanPipeline::Destroy(VkDevice device)
-	{
-		vkDestroyPipeline(device, m_Pipeline, nullptr);
-		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
-	}
-
-	VkShaderModule VulkanPipeline::CreateShaderModule(
-		VkDevice device, 
-		const char* shaderFilePath
-	)
-	{
-		VkShaderModule shaderModule = {};
-
-		std::string shaderCode = AssetManager::GetFileContent(shaderFilePath);
-		
-		VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-		createInfo.codeSize = shaderCode.size();
-		createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
 		VK_ASSERT(
-			vkCreateShaderModule(
-				device, 
-				&createInfo, 
-				nullptr, 
-				&shaderModule
-			), 
-			"Could not create shader module!"
+			vkCreateGraphicsPipelines(
+				device,
+				nullptr,
+				1,
+				&createInfo,
+				nullptr,
+				&pipeline
+			),
+			"Could not create graphics pipeline!"
 		);
-		
-		return shaderModule;
+
+		return pipeline;
 	}
 }

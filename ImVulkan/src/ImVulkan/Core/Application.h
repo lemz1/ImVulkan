@@ -31,11 +31,13 @@ namespace ImVulkan
 
 		static const Application* GetInstance() { return s_Instance; }
 
-		static const VulkanContext& GetVulkanContext() { return s_Instance->m_VulkanContext; }
+		static const VulkanContext* GetVulkanContext() { return s_Instance->m_VulkanContext; }
 	private:
 		Application(const ApplicationSpecification& spec);
 	private:
-		VulkanContext m_VulkanContext;
+		VulkanContext* m_VulkanContext;
+		VkDebugUtilsMessengerEXT m_VulkanDebugMessenger;
+
 		Window* m_Window = nullptr;
 		LayerStack m_LayerStack;
 

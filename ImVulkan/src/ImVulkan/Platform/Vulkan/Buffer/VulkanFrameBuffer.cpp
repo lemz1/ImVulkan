@@ -1,9 +1,9 @@
 #include "imvkpch.h"
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanFrameBuffer.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanFrameBuffer
 {
-	VulkanFrameBuffer::VulkanFrameBuffer(
+	VkFramebuffer Create(
 		VkDevice device, 
 		VkRenderPass renderPass, 
 		VkImageView imageView, 
@@ -11,6 +11,8 @@ namespace ImVulkan
 		uint32_t height
 	)
 	{
+		VkFramebuffer framebuffer;
+
 		VkFramebufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		createInfo.renderPass = renderPass;
 		createInfo.attachmentCount = 1;
@@ -20,34 +22,14 @@ namespace ImVulkan
 		createInfo.layers = 1;
 		VK_ASSERT(
 			vkCreateFramebuffer(
-				device, 
-				&createInfo, 
-				nullptr, 
-				&m_FrameBuffer
-			), 
+				device,
+				&createInfo,
+				nullptr,
+				&framebuffer
+			),
 			"Could not create framebuffer"
 		);
-	}
 
-	VulkanFrameBuffer::VulkanFrameBuffer(VulkanFrameBuffer&& other) noexcept
-		: m_FrameBuffer(other.m_FrameBuffer)
-	{
-		other.m_FrameBuffer = nullptr;
-	}
-
-	VulkanFrameBuffer& VulkanFrameBuffer::operator=(VulkanFrameBuffer&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_FrameBuffer = other.m_FrameBuffer;
-
-			other.m_FrameBuffer = nullptr;
-		}
-		return *this;
-	}
-
-	void VulkanFrameBuffer::Destroy(VkDevice device)
-	{
-		vkDestroyFramebuffer(device, m_FrameBuffer, nullptr);
+		return framebuffer;
 	}
 }

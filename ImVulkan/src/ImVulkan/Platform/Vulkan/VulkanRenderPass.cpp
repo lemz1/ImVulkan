@@ -1,13 +1,12 @@
 #include "imvkpch.h"
 #include "VulkanRenderPass.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanRenderPass
 {
-	VulkanRenderPass::VulkanRenderPass(
-		VkDevice device, 
-		VkFormat format
-	)
+	VkRenderPass Create(VkDevice device, VkFormat format)
 	{
+		VkRenderPass renderPass;
+
 		VkAttachmentDescription attachmentDescription = {};
 		attachmentDescription.format = format;
 		attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -31,35 +30,14 @@ namespace ImVulkan
 
 		VK_ASSERT(
 			vkCreateRenderPass(
-				device, 
-				&createInfo, 
-				nullptr, 
-				&m_RenderPass
-			), 
+				device,
+				&createInfo,
+				nullptr,
+				&renderPass
+			),
 			"Could not create render pass"
 		);
-	}
 
-	VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& other) noexcept
-		: m_RenderPass(other.m_RenderPass)
-	{
-		other.m_RenderPass = nullptr;
-	}
-
-	VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_RenderPass = other.m_RenderPass;
-
-			other.m_RenderPass = nullptr;
-		}
-
-		return *this;
-	}
-
-	void VulkanRenderPass::Destroy(VkDevice device)
-	{
-		vkDestroyRenderPass(device, m_RenderPass, nullptr);
+		return renderPass;
 	}
 }

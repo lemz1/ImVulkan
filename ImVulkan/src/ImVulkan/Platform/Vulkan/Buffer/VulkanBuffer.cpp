@@ -5,102 +5,34 @@
 #include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
 #include "ImVulkan/Platform/Vulkan/Util/VulkanMemory.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanBuffer
 {
-	VulkanBuffer::VulkanBuffer(
+	VkBuffer Create(
 		VkDevice device, 
-		VkPhysicalDevice physicalDevice, 
 		size_t size, 
-		VkBufferUsageFlags usage, 
-		VkMemoryPropertyFlags memoryProperties
+		VkBufferUsageFlags usage
 	)
 	{
-		{
-			VkBufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-			createInfo.size = size;
-			createInfo.usage = usage;
+		VkBuffer buffer = nullptr;
 
-			VK_ASSERT(
-				vkCreateBuffer(
-					device, 
-					&createInfo, 
-					nullptr, 
-					&m_Buffer), 
-				"Could not create vertex buffer!"
-			);
-		}
+		VkBufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		createInfo.size = size;
+		createInfo.usage = usage;
 
-		{
-			VkMemoryRequirements memoryRequirements;
-			vkGetBufferMemoryRequirements(
-				device, 
-				m_Buffer, 
-				&memoryRequirements
-			);
+		VK_ASSERT(
+			vkCreateBuffer(
+				device,
+				&createInfo,
+				nullptr,
+				&buffer),
+			"Could not create vertex buffer!"
+		);
 
-			uint32_t memoryIndex = VulkanMemory::FindMemoryType(
-				physicalDevice, 
-				memoryRequirements.memoryTypeBits, 
-				memoryProperties
-			);
-
-			VkMemoryAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-			allocateInfo.allocationSize = memoryRequirements.size;
-			allocateInfo.memoryTypeIndex = memoryIndex;
-
-			VK_ASSERT(
-				vkAllocateMemory(
-					device, 
-					&allocateInfo, 
-					nullptr, 
-					&m_Memory
-				), 
-				"Could not allocate memory!"
-			);
-		}
-
-		{
-			VK_ASSERT(
-				vkBindBufferMemory(
-					device, 
-					m_Buffer, 
-					m_Memory, 
-					0
-				), 
-				"Could not bind buffer memory!"
-			);
-		}
-	}
-
-	VulkanBuffer::VulkanBuffer(VulkanBuffer&& other) noexcept
-		: m_Buffer(other.m_Buffer), m_Memory(other.m_Memory)
-	{
-		other.m_Buffer = nullptr;
-		other.m_Memory = nullptr;
-	}
-
-	VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer && other) noexcept
-	{
-		if (this != &other)
-		{
-			m_Buffer = other.m_Buffer;
-			m_Memory = other.m_Memory;
-
-			other.m_Buffer = nullptr;
-			other.m_Memory = nullptr;
-		}
-
-		return *this;
-	}
-
-	void VulkanBuffer::Destroy(VkDevice device)
-	{
-		vkDestroyBuffer(device, m_Buffer, nullptr);
-		// assumes that the buffer owns its own memory block
-		vkFreeMemory(device, m_Memory, nullptr);
+		return buffer;
 	}
 
 	void VulkanBuffer::MapMemory(
+		VkBuffer buffer,
 		VkDevice device, 
 		VkPhysicalDevice physicalDevice, 
 		VkQueue queue, 
@@ -109,11 +41,23 @@ namespace ImVulkan
 		VkDeviceSize dataSize
 	)
 	{
-		VulkanBuffer stagingBuffer = VulkanBuffer(
+		VkBuffer stagingBuffer = Create(
 			device, 
-			physicalDevice, 
 			dataSize, 
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+		);
+
+		VkMemoryRequirements memoryRequirements;
+		vkGetBufferMemoryRequirements(
+			device,
+			stagingBuffer,
+			&memoryRequirements
+		);
+
+		VkDeviceMemory stagingMemory = VulkanMemory::Create(
+			physicalDevice,
+			device,
+			memoryRequirements,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 		);
 
@@ -122,7 +66,7 @@ namespace ImVulkan
 			VK_ASSERT(
 				vkMapMemory(
 					device, 
-					stagingBuffer.m_Memory, 
+					stagingMemory,
 					0, 
 					dataSize, 
 					0, 
@@ -131,31 +75,46 @@ namespace ImVulkan
 				"Could not map memory!"
 			);
 			memcpy(mapped, data, dataSize);
-			stagingBuffer.UnmapMemory(device);
+			vkUnmapMemory(device, stagingMemory);
+
+			vkBindBufferMemory(
+				device,
+				stagingBuffer,
+				stagingMemory,
+				0
+			);
 		}
 
-		VulkanCommandPool commandPool = VulkanCommandPool(device, queueFamilyIndex);
-		VulkanCommandBuffer commandBuffer = VulkanCommandBuffer(device, commandPool.GetCommandPool());
-
+		VkCommandPool commandPool = VulkanCommandPool::Create(device, queueFamilyIndex);
+		VkCommandBuffer commandBuffer = VulkanCommandBuffer::Create(device, commandPool);
 		{
-			commandBuffer.BeginCommandBuffer();
+			VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+			
+			VK_ASSERT(
+				vkBeginCommandBuffer(
+					commandBuffer, 
+					&beginInfo
+				),
+				"Could not begin command buffer!"
+			);
 
 			VkBufferCopy region = { 0, 0, dataSize };
 			vkCmdCopyBuffer(
-				commandBuffer.GetCommandBuffer(), 
-				stagingBuffer.GetBuffer(), 
-				m_Buffer, 
+				commandBuffer, 
+				stagingBuffer, 
+				buffer, 
 				1, 
 				&region
 			);
 
-			commandBuffer.EndCommandBuffer();
+			vkEndCommandBuffer(commandBuffer);
 		}
 
 		{
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &commandBuffer.GetCommandBuffer();
+			submitInfo.pCommandBuffers = &commandBuffer;
 			VK_ASSERT(
 				vkQueueSubmit(
 					queue, 
@@ -168,12 +127,8 @@ namespace ImVulkan
 			VK_ASSERT(vkQueueWaitIdle(queue), "Could not wait for queue!");
 		}
 
-		commandPool.Destroy(device);
-		stagingBuffer.Destroy(device);
-	}
-
-	void VulkanBuffer::UnmapMemory(VkDevice device)
-	{
-		vkUnmapMemory(device, m_Memory);
+		vkDestroyCommandPool(device, commandPool, nullptr);
+		vkDestroyBuffer(device, stagingBuffer, nullptr);
+		vkFreeMemory(device, stagingMemory, nullptr);
 	}
 }

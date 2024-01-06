@@ -3,6 +3,38 @@
 
 namespace ImVulkan::VulkanMemory
 {
+	VkDeviceMemory Create(
+		VkPhysicalDevice physicalDevice, 
+		VkDevice device, 
+		VkMemoryRequirements memoryRequirements,
+		VkMemoryPropertyFlags memoryProperties
+	)
+	{
+		VkDeviceMemory memory = nullptr;
+
+		uint32_t memoryIndex = VulkanMemory::FindMemoryType(
+			physicalDevice,
+			memoryRequirements.memoryTypeBits,
+			memoryProperties
+		);
+
+		VkMemoryAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+		allocateInfo.allocationSize = memoryRequirements.size;
+		allocateInfo.memoryTypeIndex = memoryIndex;
+
+		VK_ASSERT(
+			vkAllocateMemory(
+				device,
+				&allocateInfo,
+				nullptr,
+				&memory
+			),
+			"Could not allocate memory!"
+		);
+
+		return memory;
+	}
+
 	uint32_t FindMemoryType(
 		VkPhysicalDevice physicalDevice, 
 		uint32_t typeFilter, 

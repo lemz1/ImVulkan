@@ -2,45 +2,22 @@
 
 #include "ImVulkan/Platform/Vulkan/VulkanCore.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanBuffer
 {
-	class VulkanBuffer
-	{
-	public:
-		VulkanBuffer() = default;
-		VulkanBuffer(
-			VkDevice device, 
-			VkPhysicalDevice physicalDevice, 
-			size_t size, 
-			VkBufferUsageFlags usage, 
-			VkMemoryPropertyFlags memoryProperties
-		);
+	VkBuffer Create(
+		VkDevice device,
+		size_t size,
+		VkBufferUsageFlags usage
+	);
 
-		VulkanBuffer(const VulkanBuffer& other) noexcept = delete; // for now no copying
 
-		VulkanBuffer& operator=(const VulkanBuffer& other) noexcept = delete;  // for now no copying
-
-		VulkanBuffer(VulkanBuffer&& other) noexcept;
-
-		VulkanBuffer& operator=(VulkanBuffer&& other) noexcept;
-
-		void Destroy(VkDevice device);
-
-		void MapMemory(
-			VkDevice device, 
-			VkPhysicalDevice physicalDevice, 
-			VkQueue queue, 
-			uint32_t queueFamilyIndex, 
-			void* data, 
-			VkDeviceSize dataSize
-		);
-
-		void UnmapMemory(VkDevice device);
-
-		const VkBuffer& GetBuffer() const { return m_Buffer; }
-		const VkDeviceMemory GetMemory() const { return m_Memory; }
-	private:
-		VkBuffer m_Buffer = nullptr;
-		VkDeviceMemory m_Memory = nullptr;
-	};
+	void MapMemory(
+		VkBuffer buffer,
+		VkDevice device,
+		VkPhysicalDevice physicalDevice,
+		VkQueue queue,
+		uint32_t queueFamilyIndex,
+		void* data,
+		VkDeviceSize dataSize
+	);
 }

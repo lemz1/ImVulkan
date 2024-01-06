@@ -46,6 +46,11 @@ namespace ImVulkan
 		InitEventCallbacks();
 	}
 
+	GLFWWindow::~GLFWWindow()
+	{
+		delete m_Swapchain;
+	}
+
 	void GLFWWindow::Destroy(VkInstance instance, VkDevice device)
 	{
 		VK_ASSERT(vkDeviceWaitIdle(device), "Something went wrong when waiting on device idle!");
@@ -55,19 +60,19 @@ namespace ImVulkan
 		}
 		
 		{
-			m_Semaphore.Destroy(device);
+			vkDestroySemaphore(device, m_Semaphore, nullptr);
 		}
 
 		{
-			m_RenderPass.Destroy(device);
-			m_Swapchain.Destroy(device);
+			vkDestroyRenderPass(device, m_RenderPass, nullptr);
+			m_Swapchain->Destroy(device);
 			vkDestroySurfaceKHR(instance, m_Surface, nullptr);
 		}
 
 		{
 			for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
 			{
-				m_FrameBuffers[i].Destroy(device);
+				vkDestroyFramebuffer(device, m_FrameBuffers[i], nullptr);
 			}
 			m_FrameBuffers.clear();
 		}
@@ -85,7 +90,7 @@ namespace ImVulkan
 		{
 			glfwCreateWindowSurface(instance, m_WindowHandle, nullptr, &m_Surface);
 
-			m_Swapchain = VulkanSwapchain(
+			m_Swapchain = new VulkanSwapchain(
 				device,
 				physicalDevice,
 				queueFamilyIndex,
@@ -96,25 +101,25 @@ namespace ImVulkan
 		}
 
 		{
-			m_RenderPass = VulkanRenderPass(device, m_Swapchain.GetFormat());
+			m_RenderPass = VulkanRenderPass::Create(device, m_Swapchain->format);
 		}
 
 		{
-			m_FrameBuffers.resize(m_Swapchain.GetImages().size());
-			for (uint32_t i = 0; i < m_Swapchain.GetImages().size(); i++)
+			m_FrameBuffers.resize(m_Swapchain->images.size());
+			for (uint32_t i = 0; i < m_Swapchain->images.size(); i++)
 			{
-				m_FrameBuffers[i] = VulkanFrameBuffer(
+				m_FrameBuffers[i] = VulkanFrameBuffer::Create(
 					device,
-					m_RenderPass.GetRenderPass(),
-					m_Swapchain.GetImageViews()[i],
-					m_Swapchain.GetWidth(),
-					m_Swapchain.GetHeight()
+					m_RenderPass,
+					m_Swapchain->imageViews[i],
+					m_Swapchain->width,
+					m_Swapchain->height
 				);
 			}
 		}
 
 		{
-			m_Semaphore = VulkanSemaphore(device);
+			m_Semaphore = VulkanSemaphore::Create(device);
 		}
 
 		m_ImGuiContext = GLFWImGuiContext(
@@ -124,8 +129,8 @@ namespace ImVulkan
 			device,
 			queueFamilyIndex,
 			queue,
-			m_Swapchain.GetImages().size(),
-			m_RenderPass.GetRenderPass()
+			m_Swapchain->images.size(),
+			m_RenderPass
 		);
 	}
 
@@ -207,9 +212,9 @@ namespace ImVulkan
 		VK_ASSERT(
 			vkAcquireNextImageKHR(
 				device,
-				m_Swapchain.GetSwapchain(),
+				m_Swapchain->swapchain,
 				UINT64_MAX, 
-				m_Semaphore.GetSemaphore(),
+				m_Semaphore,
 				nullptr,
 				&m_ImageIndex
 			),
@@ -244,10 +249,10 @@ namespace ImVulkan
 	{
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &m_Swapchain.GetSwapchain();
+		presentInfo.pSwapchains = &m_Swapchain->swapchain;
 		presentInfo.pImageIndices = &m_ImageIndex;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_Semaphore.GetSemaphore();
+		presentInfo.pWaitSemaphores = &m_Semaphore;
 		VK_ASSERT(
 			vkQueuePresentKHR(
 				queue,
@@ -439,10 +444,10 @@ namespace ImVulkan
 		VK_ASSERT(vkDeviceWaitIdle(device), "Could not wait for device idle!");
 
 		{
-			VkSwapchainKHR oldSwapchain = m_Swapchain.GetSwapchain();
-			std::vector<VkImageView> oldImageVies = m_Swapchain.GetImageViews();
+			VkSwapchainKHR oldSwapchain = m_Swapchain->swapchain;
+			std::vector<VkImageView> oldImageVies = m_Swapchain->imageViews;
 
-			m_Swapchain = VulkanSwapchain(
+			m_Swapchain = new VulkanSwapchain(
 				device,
 				physicalDevice,
 				queueFamilyIndex,
@@ -461,27 +466,27 @@ namespace ImVulkan
 		}
 
 		{
-			m_RenderPass.Destroy(device);
+			vkDestroyRenderPass(device, m_RenderPass, nullptr);
 
-			m_RenderPass = VulkanRenderPass(device, m_Swapchain.GetFormat());
+			m_RenderPass = VulkanRenderPass::Create(device, m_Swapchain->format);
 		}
 
 		{
 			for (uint32_t i = 0; i < m_FrameBuffers.size(); i++)
 			{
-				m_FrameBuffers[i].Destroy(device);
+				vkDestroyFramebuffer(device, m_FrameBuffers[i], nullptr);
 			}
 			m_FrameBuffers.clear();
 
-			m_FrameBuffers.resize(m_Swapchain.GetImages().size());
-			for (uint32_t i = 0; i < m_Swapchain.GetImages().size(); i++)
+			m_FrameBuffers.resize(m_Swapchain->images.size());
+			for (uint32_t i = 0; i < m_Swapchain->images.size(); i++)
 			{
-				m_FrameBuffers[i] = VulkanFrameBuffer(
+				m_FrameBuffers[i] = VulkanFrameBuffer::Create(
 					device,
-					m_RenderPass.GetRenderPass(),
-					m_Swapchain.GetImageViews()[i],
-					m_Swapchain.GetWidth(),
-					m_Swapchain.GetHeight()
+					m_RenderPass,
+					m_Swapchain->imageViews[i],
+					m_Swapchain->width,
+					m_Swapchain->height
 				);
 			}
 		}

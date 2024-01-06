@@ -4,6 +4,13 @@
 
 namespace ImVulkan::VulkanMemory
 {
+	VkDeviceMemory Create(
+		VkPhysicalDevice physicalDevice,
+		VkDevice device,
+		VkMemoryRequirements memoryRequirements,
+		VkMemoryPropertyFlags memoryProperties
+	);
+
 	uint32_t FindMemoryType(
 		VkPhysicalDevice physicalDevice, 
 		uint32_t typeFilter, 

@@ -3,29 +3,10 @@
 #include "ImVulkan/Platform/Vulkan/VulkanCore.h"
 #include "ImVulkan/Platform/Vulkan/VulkanContext.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanRenderPass
 {
-	class VulkanRenderPass
-	{
-	public:
-		VulkanRenderPass() = default;
-		VulkanRenderPass(
-			VkDevice device, 
-			VkFormat format
-		);
-
-		VulkanRenderPass(const VulkanRenderPass& other) noexcept = delete; // for now no copying
-
-		VulkanRenderPass& operator=(const VulkanRenderPass& other) noexcept = delete;  // for now no copying
-
-		VulkanRenderPass(VulkanRenderPass&& other) noexcept;
-
-		VulkanRenderPass& operator=(VulkanRenderPass&& other) noexcept;
-
-		void Destroy(VkDevice device);
-
-		const VkRenderPass& GetRenderPass() const { return m_RenderPass; }
-	private:
-		VkRenderPass m_RenderPass = nullptr;
-	};
+	VkRenderPass Create(
+		VkDevice device, 
+		VkFormat format
+	);
 }

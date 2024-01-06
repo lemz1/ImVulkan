@@ -3,69 +3,58 @@
 
 #include "ImVulkan/Core/Core.h"
 
+#include "ImVulkan/Platform/Vulkan/VulkanQueueIndex.h"
+
 namespace ImVulkan 
 {
     VulkanContext::VulkanContext(
-        uint32_t instanceExtensionCount,
-        const char** instanceExtensions,
-        uint32_t deviceExtensionCount,
+        uint32_t instanceExtensionCount, 
+        const char** instanceExtensions, 
+        uint32_t deviceExtensionCount, 
         const char** deviceExtensions
     )
     {
-        {
-            const char* additionalInstanceExtensions[] = {
-                VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-                VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME
-            };
-            uint32_t additionalInstanceExtensionCount = ARRAY_COUNT(additionalInstanceExtensions);
+        const char* additionalInstanceExtensions[] = {
+            VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+            VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME
+        };
+        uint32_t additionalInstanceExtensionCount = ARRAY_COUNT(additionalInstanceExtensions);
 
-            uint32_t mergedInstanceExtensionCount = additionalInstanceExtensionCount + instanceExtensionCount;
-            const char** mergedInstanceExtensions = new const char* [mergedInstanceExtensionCount];
+        uint32_t mergedInstanceExtensionCount = additionalInstanceExtensionCount + instanceExtensionCount;
+        const char** mergedInstanceExtensions = new const char* [mergedInstanceExtensionCount];
 
-            memcpy(
-                mergedInstanceExtensions,
-                additionalInstanceExtensions,
-                additionalInstanceExtensionCount * sizeof(const char*)
-            );
+        memcpy(
+            mergedInstanceExtensions,
+            additionalInstanceExtensions,
+            additionalInstanceExtensionCount * sizeof(const char*)
+        );
 
-            memcpy(
-                mergedInstanceExtensions + additionalInstanceExtensionCount,
-                instanceExtensions,
-                instanceExtensionCount * sizeof(const char*)
-            );
+        memcpy(
+            mergedInstanceExtensions + additionalInstanceExtensionCount,
+            instanceExtensions,
+            instanceExtensionCount * sizeof(const char*)
+        );
 
-            m_Instance = VulkanInstance(mergedInstanceExtensionCount, mergedInstanceExtensions);
-        }
+        instance = VulkanInstance::Create(mergedInstanceExtensionCount, mergedInstanceExtensions);
 
-        {
-            m_PhysicalDevice = VulkanPhysicalDevice(m_Instance.GetInstance());
-        }
+        physicalDevice = VulkanPhysicalDevice::Create(instance);
+        vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 
-        {
-            m_Device = VulkanDevice(m_PhysicalDevice.GetPhysicalDevice(), deviceExtensionCount, deviceExtensions);
-        }
+        queueFamilyIndex = VulkanQueueIndex::Create(physicalDevice);
 
-        {
-            m_Fence = VulkanFence(m_Device.GetDevice());
-        }
-    }
+        device = VulkanDevice::Create(physicalDevice, queueFamilyIndex, deviceExtensionCount, deviceExtensions);
 
-    void VulkanContext::InitDebugMessenger()
-    {
-        m_DebugMessenger = VulkanDebugMessenger(m_Instance.GetInstance());
+        vkGetDeviceQueue(device, queueFamilyIndex, 0, &queue);
+
+        fence = VulkanFence::Create(device);
     }
 
     void VulkanContext::Destroy()
     {
-        if (m_DebugMessenger.GetDebugMessenger())
-        {
-            m_DebugMessenger.Destroy(m_Instance.GetInstance());
-        }
+        vkDestroyFence(device, fence, nullptr);
 
-        m_Fence.Destroy(m_Device.GetDevice());
+        vkDestroyDevice(device, nullptr);
 
-        m_Device.Destroy();
-
-        m_Instance.Destroy();
+        vkDestroyInstance(instance, nullptr);
     }
 }

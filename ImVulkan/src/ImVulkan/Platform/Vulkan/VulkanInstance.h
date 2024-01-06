@@ -2,29 +2,10 @@
 
 #include "ImVulkan/Platform/Vulkan/VulkanCore.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanInstance
 {
-	class VulkanInstance
-	{
-	public:
-		VulkanInstance() = default;
-		VulkanInstance(
-			uint32_t instanceExtensionCount, 
-			const char** instanceExtensions
-		);
-
-		VulkanInstance(const VulkanInstance& other) noexcept = delete; // for now no copying
-
-		VulkanInstance& operator=(const VulkanInstance& other) noexcept = delete;  // for now no copying
-
-		VulkanInstance(VulkanInstance&& other) noexcept;
-
-		VulkanInstance& operator=(VulkanInstance&& other) noexcept;
-
-		void Destroy();
-
-		const VkInstance& GetInstance() const { return m_Instance; }
-	private:
-		VkInstance m_Instance = nullptr;
-	};
+	VkInstance Create(
+		uint32_t instanceExtensionCount, 
+		const char** instanceExtensions
+	);
 }

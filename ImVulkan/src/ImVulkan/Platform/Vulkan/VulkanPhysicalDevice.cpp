@@ -1,17 +1,19 @@
 #include "imvkpch.h"
 #include "ImVulkan/Platform/Vulkan/VulkanPhysicalDevice.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanPhysicalDevice
 {
-	VulkanPhysicalDevice::VulkanPhysicalDevice(VkInstance instance)
+	VkPhysicalDevice Create(VkInstance instance)
 	{
+		VkPhysicalDevice physicalDevice;
+
 		uint32_t numDevices;
 		VK_ASSERT(
 			vkEnumeratePhysicalDevices(
-				instance, 
-				&numDevices, 
+				instance,
+				&numDevices,
 				nullptr
-			), 
+			),
 			"Error enumerating physical devices!"
 		);
 		IMVK_ASSERT(numDevices == 0, "Vulkan: Failed to find GPUs with Vulkan Support!");
@@ -19,10 +21,10 @@ namespace ImVulkan
 		VkPhysicalDevice* physicalDevices = new VkPhysicalDevice[numDevices];
 		VK_ASSERT(
 			vkEnumeratePhysicalDevices(
-				instance, 
-				&numDevices, 
+				instance,
+				&numDevices,
 				physicalDevices
-			), 
+			),
 			"Error enumerating physical devices!"
 		);
 
@@ -36,34 +38,15 @@ namespace ImVulkan
 		}
 		#endif
 
-		m_PhysicalDevice = physicalDevices[0];
+		physicalDevice = physicalDevices[0];
 		delete[] physicalDevices;
 
-		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &m_PhysicalDeviceProperties);
-
 		#ifdef VK_DEBUG_INFO
-		IMVK_INFO("Selected GPU: " << m_PhysicalDeviceProperties.deviceName);
+		VkPhysicalDeviceProperties properties = {};
+		vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+		IMVK_INFO("Selected GPU: " << properties.deviceName);
 		#endif
-	}
 
-	VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanPhysicalDevice&& other) noexcept
-		: m_PhysicalDevice(other.m_PhysicalDevice), m_PhysicalDeviceProperties(other.m_PhysicalDeviceProperties)
-	{
-		other.m_PhysicalDevice = nullptr;
-		other.m_PhysicalDeviceProperties = {};
-	}
-
-	VulkanPhysicalDevice& VulkanPhysicalDevice::operator=(VulkanPhysicalDevice&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_PhysicalDevice = other.m_PhysicalDevice;
-			m_PhysicalDeviceProperties = other.m_PhysicalDeviceProperties;
-
-			other.m_PhysicalDevice = nullptr;
-			other.m_PhysicalDeviceProperties = {};
-		}
-
-		return *this;
+		return physicalDevice;
 	}
 }

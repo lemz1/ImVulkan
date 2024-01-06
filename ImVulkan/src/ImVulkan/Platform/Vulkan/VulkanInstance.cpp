@@ -1,27 +1,26 @@
 #include "imvkpch.h"
 #include "ImVulkan/Platform/Vulkan/VulkanInstance.h"
 
-namespace ImVulkan
+namespace ImVulkan::VulkanInstance
 {
-	VulkanInstance::VulkanInstance(
-		uint32_t instanceExtensionCount, 
-		const char** instanceExtensions
-	)
+	VkInstance Create(uint32_t instanceExtensionCount, const char** instanceExtensions)
 	{
+		VkInstance instance = nullptr;
+
 		uint32_t layerPropertyCount;
 		VK_ASSERT(
 			vkEnumerateInstanceLayerProperties(
-				&layerPropertyCount, 
+				&layerPropertyCount,
 				nullptr
-			), 
+			),
 			"Error enumerating instance layer properties!"
 		);
 		VkLayerProperties* layerProperties = new VkLayerProperties[layerPropertyCount];
 		VK_ASSERT(
 			vkEnumerateInstanceLayerProperties(
-				&layerPropertyCount, 
+				&layerPropertyCount,
 				layerProperties
-			), 
+			),
 			"Error enumerating instance layer properties!"
 		);
 
@@ -63,32 +62,13 @@ namespace ImVulkan
 
 		VK_ASSERT(
 			vkCreateInstance(
-				&createInfo, 
-				nullptr, 
-				&m_Instance
-			), 
+				&createInfo,
+				nullptr,
+				&instance
+			),
 			"Error creating Vulkan instance!"
 		);
-	}
 
-	VulkanInstance::VulkanInstance(VulkanInstance&& other) noexcept
-		: m_Instance(other.m_Instance)
-	{
-		other.m_Instance = nullptr;
-	}
-
-	VulkanInstance& VulkanInstance::operator=(VulkanInstance&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_Instance = other.m_Instance;
-		}
-
-		return *this;
-	}
-
-	void VulkanInstance::Destroy()
-	{
-		vkDestroyInstance(m_Instance, nullptr);
+		return instance;
 	}
 }

@@ -26,6 +26,7 @@ namespace ImVulkan
 	{
 	public:
 		GLFWWindow(const WindowSpecification& spec);
+		~GLFWWindow() override;
 
 		void Destroy(
 			VkInstance instance,
@@ -106,15 +107,15 @@ namespace ImVulkan
 		void SetRecreateSwapchain(const PFN_RecreateSwapchain& recreateSwapchain) { m_Data.recreateSwapchain = recreateSwapchain; }
 
 		const VkSurfaceKHR& GetSurface() const override { return m_Surface; }
-		const VkSwapchainKHR& GetSwapchain() const override { return m_Swapchain.GetSwapchain(); }
+		const VkSwapchainKHR& GetSwapchain() const override { return m_Swapchain->swapchain; }
 		const uint32_t& GetCurrentImageIndex() const override { return m_ImageIndex; }
-		const VkImage& GetCurrentImage() const override { return m_Swapchain.GetImages()[m_ImageIndex]; }
-		const VkImageView& GetCurrentImageView() const override { return m_Swapchain.GetImageViews()[m_ImageIndex]; }
+		const VkImage& GetCurrentImage() const override { return m_Swapchain->images[m_ImageIndex]; }
+		const VkImageView& GetCurrentImageView() const override { return m_Swapchain->imageViews[m_ImageIndex]; }
 
-		const VkRenderPass& GetRenderPass() const override { return m_RenderPass.GetRenderPass(); }
-		const VkFramebuffer& GetCurrentFrameBuffer() const override { return m_FrameBuffers[m_ImageIndex].GetFrameBuffer(); }
+		const VkRenderPass& GetRenderPass() const override { return m_RenderPass; }
+		const VkFramebuffer& GetCurrentFrameBuffer() const override { return m_FrameBuffers[m_ImageIndex]; }
 
-		const VkSemaphore& GetSemaphore() const { return m_Semaphore.GetSemaphore(); };
+		const VkSemaphore& GetSemaphore() const { return m_Semaphore; };
 	private:
 		void InitEventCallbacks();
 
@@ -132,12 +133,11 @@ namespace ImVulkan
 		GLFWwindow* m_WindowHandle;
 
 		VkSurfaceKHR m_Surface;
-		VulkanSwapchain m_Swapchain;
+		VulkanSwapchain* m_Swapchain;
 		uint32_t m_ImageIndex = 0;
-		VulkanRenderPass m_RenderPass;
-		std::vector<VulkanFrameBuffer> m_FrameBuffers;
-		VulkanSemaphore m_Semaphore;
-
+		VkRenderPass m_RenderPass;
+		std::vector<VkFramebuffer> m_FrameBuffers;
+		VkSemaphore m_Semaphore;
 
 		struct WindowData
 		{

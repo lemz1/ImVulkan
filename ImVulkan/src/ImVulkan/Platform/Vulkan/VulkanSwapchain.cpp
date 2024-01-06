@@ -22,8 +22,8 @@ namespace ImVulkan
 		VK_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &numFormats, availableFormats), "No surface formats available!");
 
 		// first format should be a sensible default in most cases
-		VkFormat format = availableFormats[0].format;
-		VkColorSpaceKHR colorSpace = availableFormats[0].colorSpace;
+		format = availableFormats[0].format;
+		colorSpace = availableFormats[0].colorSpace;
 
 		delete[] availableFormats;
 
@@ -61,16 +61,15 @@ namespace ImVulkan
 			createInfo.oldSwapchain = oldSwapchain;
 		}
 
-		m_Format = format;
-		m_Width = surfaceCapabilities.currentExtent.width;
-		m_Height = surfaceCapabilities.currentExtent.height;
+		width = surfaceCapabilities.currentExtent.width;
+		height = surfaceCapabilities.currentExtent.height;
 
 		VK_ASSERT(
 			vkCreateSwapchainKHR(
 				device, 
 				&createInfo, 
 				nullptr, 
-				&m_Swapchain
+				&swapchain
 			), 
 			"failed at creating swapchain"
 		);
@@ -79,32 +78,32 @@ namespace ImVulkan
 		VK_ASSERT(
 			vkGetSwapchainImagesKHR(
 				device, 
-				m_Swapchain, 
+				swapchain, 
 				&numImages, 
 				nullptr
 			), 
 			"failed at swapchain images!"
 		);
 
-		m_Images.resize(numImages);
+		images.resize(numImages);
 
 		VK_ASSERT(
 			vkGetSwapchainImagesKHR(
 				device, 
-				m_Swapchain, 
+				swapchain, 
 				&numImages, 
-				m_Images.data()
+				images.data()
 			), 
 			"failed at swapchain images!"
 		);
 
-		m_ImageViews.resize(numImages);
+		imageViews.resize(numImages);
 		for (uint32_t i = 0; i < numImages; i++)
 		{
 			VkImageViewCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-			createInfo.image = m_Images[i];
+			createInfo.image = images[i];
 			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = m_Format;
+			createInfo.format = format;
 			createInfo.components = {};
 			createInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 
@@ -113,51 +112,20 @@ namespace ImVulkan
 					device, 
 					&createInfo, 
 					nullptr, 
-					&m_ImageViews[i]
+					&imageViews[i]
 				), 
 				"Could not create image views"
 			);
 		}
 	}
 
-	VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& other) noexcept
-		: m_Format(other.m_Format), m_Height(other.m_Height), 
-		  m_Images(Move(other.m_Images)), m_ImageViews(Move(other.m_ImageViews)),
-		  m_Swapchain(other.m_Swapchain), m_Width(other.m_Width)
-	{
-		other.m_Format = VK_FORMAT_UNDEFINED;
-		other.m_Height = 0;
-		other.m_Swapchain = nullptr;
-		other.m_Width = 0;
-	}
-
-	VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_Format = other.m_Format;
-			m_Height = other.m_Height;
-			m_Images = Move(other.m_Images);
-			m_ImageViews = Move(other.m_ImageViews);
-			m_Swapchain = other.m_Swapchain;
-			m_Width = other.m_Width;
-
-			other.m_Format = VK_FORMAT_UNDEFINED;
-			other.m_Height = 0;
-			other.m_Swapchain = nullptr;
-			other.m_Width = 0;
-		}
-
-		return *this;
-	}
-
 	void VulkanSwapchain::Destroy(VkDevice device)
 	{
-		for (uint32_t i = 0; i < m_ImageViews.size(); i++)
+		for (uint32_t i = 0; i < imageViews.size(); i++)
 		{
-			vkDestroyImageView(device, m_ImageViews[i], nullptr);
+			vkDestroyImageView(device, imageViews[i], nullptr);
 		}
 
-		vkDestroySwapchainKHR(device, m_Swapchain, nullptr);
+		vkDestroySwapchainKHR(device, swapchain, nullptr);
 	}
 }
