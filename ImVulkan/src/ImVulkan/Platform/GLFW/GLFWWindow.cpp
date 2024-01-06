@@ -22,9 +22,9 @@ namespace ImVulkan
 		return new GLFWWindow(spec);
 	}
 
-	uint32_t GLFWWindow::instanceExtensionCount = UINT32_MAX;
+	uint32_t GLFWWindow::instanceExtensionCount = 0;
 	const char** GLFWWindow::instanceExtensions = nullptr;
-	uint32_t GLFWWindow::deviceExtensionCount = UINT32_MAX;
+	uint32_t GLFWWindow::deviceExtensionCount = 0;
 	const char** GLFWWindow::deviceExtensions = nullptr;
 
 	GLFWWindow::GLFWWindow(const WindowSpecification& spec)
@@ -46,11 +46,6 @@ namespace ImVulkan
 		InitEventCallbacks();
 	}
 
-	GLFWWindow::~GLFWWindow()
-	{
-		delete m_Swapchain;
-	}
-
 	void GLFWWindow::Destroy(VkInstance instance, VkDevice device)
 	{
 		VK_ASSERT(vkDeviceWaitIdle(device), "Something went wrong when waiting on device idle!");
@@ -65,7 +60,7 @@ namespace ImVulkan
 
 		{
 			vkDestroyRenderPass(device, m_RenderPass, nullptr);
-			m_Swapchain->Destroy(device);
+			m_Swapchain.Destroy(device);
 			vkDestroySurfaceKHR(instance, m_Surface, nullptr);
 		}
 
@@ -90,7 +85,7 @@ namespace ImVulkan
 		{
 			glfwCreateWindowSurface(instance, m_WindowHandle, nullptr, &m_Surface);
 
-			m_Swapchain = new VulkanSwapchain(
+			m_Swapchain = VulkanSwapchain(
 				device,
 				physicalDevice,
 				queueFamilyIndex,
@@ -101,19 +96,19 @@ namespace ImVulkan
 		}
 
 		{
-			m_RenderPass = VulkanRenderPass::Create(device, m_Swapchain->format);
+			m_RenderPass = VulkanRenderPass::Create(device, m_Swapchain.format);
 		}
 
 		{
-			m_FrameBuffers.resize(m_Swapchain->images.size());
-			for (uint32_t i = 0; i < m_Swapchain->images.size(); i++)
+			m_FrameBuffers.resize(m_Swapchain.images.size());
+			for (uint32_t i = 0; i < m_Swapchain.images.size(); i++)
 			{
 				m_FrameBuffers[i] = VulkanFrameBuffer::Create(
 					device,
 					m_RenderPass,
-					m_Swapchain->imageViews[i],
-					m_Swapchain->width,
-					m_Swapchain->height
+					m_Swapchain.imageViews[i],
+					m_Swapchain.width,
+					m_Swapchain.height
 				);
 			}
 		}
@@ -129,7 +124,7 @@ namespace ImVulkan
 			device,
 			queueFamilyIndex,
 			queue,
-			m_Swapchain->images.size(),
+			m_Swapchain.images.size(),
 			m_RenderPass
 		);
 	}
@@ -139,7 +134,7 @@ namespace ImVulkan
 		const char**& outInstanceExtensions
 	)
 	{
-		if (GLFWWindow::instanceExtensionCount == UINT32_MAX)
+		if (GLFWWindow::instanceExtensionCount == 0)
 		{
 			GLFWWindow::instanceExtensions = glfwGetRequiredInstanceExtensions(&GLFWWindow::instanceExtensionCount);
 		}
@@ -153,7 +148,7 @@ namespace ImVulkan
 		const char**& outDeviceExtensions
 	)
 	{
-		if (GLFWWindow::deviceExtensionCount == UINT32_MAX)
+		if (GLFWWindow::deviceExtensionCount == 0)
 		{
 			GLFWWindow::deviceExtensions = new const char* []
 			{
@@ -212,7 +207,7 @@ namespace ImVulkan
 		VK_ASSERT(
 			vkAcquireNextImageKHR(
 				device,
-				m_Swapchain->swapchain,
+				m_Swapchain.swapchain,
 				UINT64_MAX, 
 				m_Semaphore,
 				nullptr,
@@ -249,7 +244,7 @@ namespace ImVulkan
 	{
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &m_Swapchain->swapchain;
+		presentInfo.pSwapchains = &m_Swapchain.swapchain;
 		presentInfo.pImageIndices = &m_ImageIndex;
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_Semaphore;
@@ -444,10 +439,10 @@ namespace ImVulkan
 		VK_ASSERT(vkDeviceWaitIdle(device), "Could not wait for device idle!");
 
 		{
-			VkSwapchainKHR oldSwapchain = m_Swapchain->swapchain;
-			std::vector<VkImageView> oldImageVies = m_Swapchain->imageViews;
+			VkSwapchainKHR oldSwapchain = m_Swapchain.swapchain;
+			std::vector<VkImageView> oldImageVies = m_Swapchain.imageViews;
 
-			m_Swapchain = new VulkanSwapchain(
+			m_Swapchain = VulkanSwapchain(
 				device,
 				physicalDevice,
 				queueFamilyIndex,
@@ -468,7 +463,7 @@ namespace ImVulkan
 		{
 			vkDestroyRenderPass(device, m_RenderPass, nullptr);
 
-			m_RenderPass = VulkanRenderPass::Create(device, m_Swapchain->format);
+			m_RenderPass = VulkanRenderPass::Create(device, m_Swapchain.format);
 		}
 
 		{
@@ -478,15 +473,15 @@ namespace ImVulkan
 			}
 			m_FrameBuffers.clear();
 
-			m_FrameBuffers.resize(m_Swapchain->images.size());
-			for (uint32_t i = 0; i < m_Swapchain->images.size(); i++)
+			m_FrameBuffers.resize(m_Swapchain.images.size());
+			for (uint32_t i = 0; i < m_Swapchain.images.size(); i++)
 			{
 				m_FrameBuffers[i] = VulkanFrameBuffer::Create(
 					device,
 					m_RenderPass,
-					m_Swapchain->imageViews[i],
-					m_Swapchain->width,
-					m_Swapchain->height
+					m_Swapchain.imageViews[i],
+					m_Swapchain.width,
+					m_Swapchain.height
 				);
 			}
 		}

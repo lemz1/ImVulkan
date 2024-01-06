@@ -54,7 +54,7 @@ namespace ImVulkan
 			const char** deviceExtensions;
 			m_Window->GetDeviceExtensions(deviceExtensionCount, deviceExtensions);
 
-			m_VulkanContext = new VulkanContext(
+			m_VulkanContext = VulkanContext(
 				mergedInstanceExtensionCount,
 				mergedInstanceExtensions,
 				deviceExtensionCount, 
@@ -65,11 +65,11 @@ namespace ImVulkan
 		}
 
 		m_Window->InitVulkan(
-			m_VulkanContext->instance,
-			m_VulkanContext->physicalDevice,
-			m_VulkanContext->device,
-			m_VulkanContext->queueFamilyIndex,
-			m_VulkanContext->queue
+			m_VulkanContext.instance,
+			m_VulkanContext.physicalDevice,
+			m_VulkanContext.device,
+			m_VulkanContext.queueFamilyIndex,
+			m_VulkanContext.queue
 		);
 
 		m_Window->SetEventCallback(
@@ -94,23 +94,22 @@ namespace ImVulkan
 		);
 		#endif
 
-		m_VulkanDebugMessenger = VulkanDebugMessenger::Create(m_VulkanContext->instance);
+		m_VulkanDebugMessenger = VulkanDebugMessenger::Create(m_VulkanContext.instance);
 	}
 
 	Application::~Application()
 	{
 		#ifndef IMVK_HEADLESS
-		m_Window->Destroy(m_VulkanContext->instance, m_VulkanContext->device);
+		m_Window->Destroy(m_VulkanContext.instance, m_VulkanContext.device);
 		delete m_Window;
 		#endif
 
 		m_LayerStack.Destroy();
 
-		VulkanDebugMessenger::Destroy(m_VulkanDebugMessenger, m_VulkanContext->instance);
+		VulkanDebugMessenger::Destroy(m_VulkanDebugMessenger, m_VulkanContext.instance);
 
-		m_VulkanContext->Destroy();
-		delete m_VulkanContext;
-
+		m_VulkanContext.Destroy();
+		
 		Application::s_Instance = nullptr;
 	}
 
@@ -138,9 +137,9 @@ namespace ImVulkan
 
 			#ifndef IMVK_HEADLESS
 			if (!m_Window->AcquireNextImage(
-					m_VulkanContext->physicalDevice, 
-					m_VulkanContext->device, 
-					m_VulkanContext->queueFamilyIndex
+					m_VulkanContext.physicalDevice, 
+					m_VulkanContext.device, 
+					m_VulkanContext.queueFamilyIndex
 				)
 			)
 			{
@@ -149,9 +148,9 @@ namespace ImVulkan
 
 			VK_ASSERT(
 				vkWaitForFences(
-					m_VulkanContext->device,
+					m_VulkanContext.device,
 					1,
-					&m_VulkanContext->fence,
+					&m_VulkanContext.fence,
 					VK_TRUE,
 					UINT64_MAX
 				),
@@ -160,9 +159,9 @@ namespace ImVulkan
 
 			VK_ASSERT(
 				vkResetFences(
-					m_VulkanContext->device,
+					m_VulkanContext.device,
 					1,
-					&m_VulkanContext->fence
+					&m_VulkanContext.fence
 				),
 				"Could not reset fence!"
 			);
@@ -177,11 +176,11 @@ namespace ImVulkan
 
 			m_Window->SwapBuffers(
 				imGuiDrawData,
-				m_VulkanContext->physicalDevice,
-				m_VulkanContext->device,
-				m_VulkanContext->queueFamilyIndex,
-				m_VulkanContext->queue,
-				m_VulkanContext->fence
+				m_VulkanContext.physicalDevice,
+				m_VulkanContext.device,
+				m_VulkanContext.queueFamilyIndex,
+				m_VulkanContext.queue,
+				m_VulkanContext.fence
 			);
 			#endif
 		}
@@ -200,9 +199,9 @@ namespace ImVulkan
 	{
 		#ifndef IMVK_HEADLESS
 		m_Window->RecreateSwapchain(
-			m_VulkanContext->physicalDevice,
-			m_VulkanContext->device,
-			m_VulkanContext->queueFamilyIndex
+			m_VulkanContext.physicalDevice,
+			m_VulkanContext.device,
+			m_VulkanContext.queueFamilyIndex
 		);
 		#endif
 	}

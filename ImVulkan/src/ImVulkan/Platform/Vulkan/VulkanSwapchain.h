@@ -9,6 +9,7 @@ namespace ImVulkan
 	struct VulkanSwapchain
 	{
 	public:
+		VulkanSwapchain() = default;
 		VulkanSwapchain(
 			VkDevice device,
 			VkPhysicalDevice physicalDevice,

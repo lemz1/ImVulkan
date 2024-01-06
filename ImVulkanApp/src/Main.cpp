@@ -20,8 +20,8 @@ namespace ImVulkan
 			IMVK_ERROR("Example Layer Create!");
 
 			{
-				VkShaderModule vertexModule = VulkanShaderModule::Create(Application::GetVulkanContext()->device, "assets/shaders/color.vert.spv");
-				VkShaderModule fragmentModule = VulkanShaderModule::Create(Application::GetVulkanContext()->device, "assets/shaders/color.frag.spv");
+				VkShaderModule vertexModule = VulkanShaderModule::Create(Application::GetVulkanContext().device, "assets/shaders/color.vert.spv");
+				VkShaderModule fragmentModule = VulkanShaderModule::Create(Application::GetVulkanContext().device, "assets/shaders/color.frag.spv");
 
 				VkPipelineShaderStageCreateInfo shaderStages[2];
 				shaderStages[0] = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -51,13 +51,13 @@ namespace ImVulkan
 				attributeDescriptions[1].offset = sizeof(float) * 2;
 
 				m_VulkanPipelineLayout = VulkanPipelineLayout::Create(
-					Application::GetVulkanContext()->device,
+					Application::GetVulkanContext().device,
 					0,
 					nullptr
 				);
 
 				m_VulkanPipeline = VulkanPipeline::Create(
-					Application::GetVulkanContext()->device,
+					Application::GetVulkanContext().device,
 					ARRAY_COUNT(shaderStages),
 					shaderStages,
 					Application::GetWindow()->GetRenderPass(),
@@ -68,13 +68,13 @@ namespace ImVulkan
 				);
 
 				vkDestroyShaderModule(
-					Application::GetVulkanContext()->device,
+					Application::GetVulkanContext().device,
 					fragmentModule,
 					nullptr
 				);
 
 				vkDestroyShaderModule(
-					Application::GetVulkanContext()->device,
+					Application::GetVulkanContext().device,
 					vertexModule,
 					nullptr
 				);
@@ -102,27 +102,27 @@ namespace ImVulkan
 
 				{
 					m_VertexBuffer = VulkanBuffer::Create(
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().device,
 						sizeof(vertexData),
 						VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 					);
 
 					VkMemoryRequirements memoryRequirements;
 					vkGetBufferMemoryRequirements(
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().device,
 						m_VertexBuffer,
 						&memoryRequirements
 					);
 
 					m_VertexMemory = VulkanMemory::Create(
-						Application::GetVulkanContext()->physicalDevice,
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().physicalDevice,
+						Application::GetVulkanContext().device,
 						memoryRequirements,
 						VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 					);
 
 					vkBindBufferMemory(
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().device,
 						m_VertexBuffer,
 						m_VertexMemory,
 						0
@@ -130,39 +130,39 @@ namespace ImVulkan
 
 					VulkanBuffer::MapMemory(
 						m_VertexBuffer,
-						Application::GetVulkanContext()->device,
-						Application::GetVulkanContext()->physicalDevice,
-						Application::GetVulkanContext()->queue,
-						Application::GetVulkanContext()->queueFamilyIndex,
+						Application::GetVulkanContext().device,
+						Application::GetVulkanContext().physicalDevice,
+						Application::GetVulkanContext().queue,
+						Application::GetVulkanContext().queueFamilyIndex,
 						vertexData,
 						sizeof(vertexData)
 					);
-					//m_VertexBuffer.UnmapMemory(Application::GetVulkanContext()->device);
+					//m_VertexBuffer.UnmapMemory(Application::GetVulkanContext().device);
 				}
 
 				{
 					m_IndexBuffer = VulkanBuffer::Create(
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().device,
 						sizeof(indexData),
 						VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 					);
 
 					VkMemoryRequirements memoryRequirements;
 					vkGetBufferMemoryRequirements(
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().device,
 						m_IndexBuffer,
 						&memoryRequirements
 					);
 
 					m_IndexMemory = VulkanMemory::Create(
-						Application::GetVulkanContext()->physicalDevice,
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().physicalDevice,
+						Application::GetVulkanContext().device,
 						memoryRequirements,
 						VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 					);
 
 					vkBindBufferMemory(
-						Application::GetVulkanContext()->device,
+						Application::GetVulkanContext().device,
 						m_IndexBuffer,
 						m_IndexMemory,
 						0
@@ -170,25 +170,25 @@ namespace ImVulkan
 
 					VulkanBuffer::MapMemory(
 						m_IndexBuffer,
-						Application::GetVulkanContext()->device,
-						Application::GetVulkanContext()->physicalDevice,
-						Application::GetVulkanContext()->queue,
-						Application::GetVulkanContext()->queueFamilyIndex,
+						Application::GetVulkanContext().device,
+						Application::GetVulkanContext().physicalDevice,
+						Application::GetVulkanContext().queue,
+						Application::GetVulkanContext().queueFamilyIndex,
 						indexData,
 						sizeof(indexData)
 					);
-					//m_IndexBuffer.UnmapMemory(Application::GetVulkanContext()->device);
+					//m_IndexBuffer.UnmapMemory(Application::GetVulkanContext().device);
 				}
 			}
 
 			{
 				m_CommandPool = VulkanCommandPool::Create(
-					Application::GetVulkanContext()->device,
-					Application::GetVulkanContext()->queueFamilyIndex
+					Application::GetVulkanContext().device,
+					Application::GetVulkanContext().queueFamilyIndex
 				);
 
 				m_CommandBuffer = VulkanCommandBuffer::Create(
-					Application::GetVulkanContext()->device,
+					Application::GetVulkanContext().device,
 					m_CommandPool
 				);
 			}
@@ -196,22 +196,22 @@ namespace ImVulkan
 
 		void OnDestroy() override
 		{
-			vkDestroyBuffer(Application::GetVulkanContext()->device, m_VertexBuffer, nullptr);
-			vkFreeMemory(Application::GetVulkanContext()->device, m_VertexMemory, nullptr);
-			vkDestroyBuffer(Application::GetVulkanContext()->device, m_IndexBuffer, nullptr);
-			vkFreeMemory(Application::GetVulkanContext()->device, m_IndexMemory, nullptr);
-			vkDestroyPipeline(Application::GetVulkanContext()->device, m_VulkanPipeline, nullptr);
-			vkDestroyPipelineLayout(Application::GetVulkanContext()->device, m_VulkanPipelineLayout, nullptr);
-			vkDestroyCommandPool(Application::GetVulkanContext()->device, m_CommandPool, nullptr);
+			vkDestroyBuffer(Application::GetVulkanContext().device, m_VertexBuffer, nullptr);
+			vkFreeMemory(Application::GetVulkanContext().device, m_VertexMemory, nullptr);
+			vkDestroyBuffer(Application::GetVulkanContext().device, m_IndexBuffer, nullptr);
+			vkFreeMemory(Application::GetVulkanContext().device, m_IndexMemory, nullptr);
+			vkDestroyPipeline(Application::GetVulkanContext().device, m_VulkanPipeline, nullptr);
+			vkDestroyPipelineLayout(Application::GetVulkanContext().device, m_VulkanPipelineLayout, nullptr);
+			vkDestroyCommandPool(Application::GetVulkanContext().device, m_CommandPool, nullptr);
 		}
 
 		void OnDraw() override
 		{
-			vkDeviceWaitIdle(Application::GetVulkanContext()->device);
+			vkDeviceWaitIdle(Application::GetVulkanContext().device);
 
 			VK_ASSERT(
 				vkResetCommandPool(
-					Application::GetVulkanContext()->device,
+					Application::GetVulkanContext().device,
 					m_CommandPool,
 					0
 				),
@@ -312,15 +312,15 @@ namespace ImVulkan
 			submitInfo.pWaitDstStageMask = &waitMask;
 			VK_ASSERT(
 				vkQueueSubmit(
-					Application::GetVulkanContext()->queue,
+					Application::GetVulkanContext().queue,
 					1,
 					&submitInfo,
-					Application::GetVulkanContext()->fence
+					Application::GetVulkanContext().fence
 				),
 				"Could not submit queue"
 			);
 
-			vkDeviceWaitIdle(Application::GetVulkanContext()->device);
+			vkDeviceWaitIdle(Application::GetVulkanContext().device);
 		}
 
 		void OnDrawImGui() override

@@ -26,7 +26,6 @@ namespace ImVulkan
 	{
 	public:
 		GLFWWindow(const WindowSpecification& spec);
-		~GLFWWindow() override;
 
 		void Destroy(
 			VkInstance instance,
@@ -107,10 +106,10 @@ namespace ImVulkan
 		void SetRecreateSwapchain(const PFN_RecreateSwapchain& recreateSwapchain) { m_Data.recreateSwapchain = recreateSwapchain; }
 
 		const VkSurfaceKHR& GetSurface() const override { return m_Surface; }
-		const VkSwapchainKHR& GetSwapchain() const override { return m_Swapchain->swapchain; }
+		const VkSwapchainKHR& GetSwapchain() const override { return m_Swapchain.swapchain; }
 		const uint32_t& GetCurrentImageIndex() const override { return m_ImageIndex; }
-		const VkImage& GetCurrentImage() const override { return m_Swapchain->images[m_ImageIndex]; }
-		const VkImageView& GetCurrentImageView() const override { return m_Swapchain->imageViews[m_ImageIndex]; }
+		const VkImage& GetCurrentImage() const override { return m_Swapchain.images[m_ImageIndex]; }
+		const VkImageView& GetCurrentImageView() const override { return m_Swapchain.imageViews[m_ImageIndex]; }
 
 		const VkRenderPass& GetRenderPass() const override { return m_RenderPass; }
 		const VkFramebuffer& GetCurrentFrameBuffer() const override { return m_FrameBuffers[m_ImageIndex]; }
@@ -133,7 +132,7 @@ namespace ImVulkan
 		GLFWwindow* m_WindowHandle;
 
 		VkSurfaceKHR m_Surface;
-		VulkanSwapchain* m_Swapchain;
+		VulkanSwapchain m_Swapchain;
 		uint32_t m_ImageIndex = 0;
 		VkRenderPass m_RenderPass;
 		std::vector<VkFramebuffer> m_FrameBuffers;

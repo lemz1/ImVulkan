@@ -12,6 +12,7 @@ namespace ImVulkan
 	struct VulkanContext
 	{
 	public:
+		VulkanContext() = default;
 		VulkanContext(
 			uint32_t instanceExtensionCount, 
 			const char** instanceExtensions, 
