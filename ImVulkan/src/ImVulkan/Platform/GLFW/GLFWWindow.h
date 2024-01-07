@@ -81,19 +81,20 @@ namespace ImVulkan
 		const bool AcquireNextImage(
 			VkPhysicalDevice physicalDevice,
 			VkDevice device,
-			uint32_t queueFamilyIndex
+			uint32_t queueFamilyIndex,
+			VkSemaphore signalSemaphore
 		) override;
 
 		void BeginImGuiFrame() override;
 		ImDrawData* EndImGuiFrame() override;
 
 		void SwapBuffers(
-			ImDrawData* imGuiDrawData,
 			VkPhysicalDevice physicalDevice,
 			VkDevice device,
 			uint32_t queueFamilyIndex,
 			VkQueue queue,
-			VkFence fence
+			VkFence fence,
+			VkSemaphore waitSemaphore
 		) override;
 
 		void RecreateSwapchain(
@@ -113,8 +114,6 @@ namespace ImVulkan
 
 		const VkRenderPass& GetRenderPass() const override { return m_RenderPass; }
 		const VkFramebuffer& GetCurrentFrameBuffer() const override { return m_FrameBuffers[m_ImageIndex]; }
-
-		const VkSemaphore& GetSemaphore() const { return m_Semaphore; };
 	private:
 		void InitEventCallbacks();
 
@@ -136,7 +135,6 @@ namespace ImVulkan
 		uint32_t m_ImageIndex = 0;
 		VkRenderPass m_RenderPass;
 		std::vector<VkFramebuffer> m_FrameBuffers;
-		VkSemaphore m_Semaphore;
 
 		struct WindowData
 		{

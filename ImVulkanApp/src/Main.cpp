@@ -207,8 +207,6 @@ namespace ImVulkan
 
 		void OnDraw() override
 		{
-			vkDeviceWaitIdle(Application::GetVulkanContext().device);
-
 			VK_ASSERT(
 				vkResetCommandPool(
 					Application::GetVulkanContext().device,
@@ -305,22 +303,7 @@ namespace ImVulkan
 			}
 			vkEndCommandBuffer(m_CommandBuffer);
 
-			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_CommandBuffer;
-			VkPipelineStageFlags waitMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			submitInfo.pWaitDstStageMask = &waitMask;
-			VK_ASSERT(
-				vkQueueSubmit(
-					Application::GetVulkanContext().queue,
-					1,
-					&submitInfo,
-					Application::GetVulkanContext().fence
-				),
-				"Could not submit queue"
-			);
-
-			vkDeviceWaitIdle(Application::GetVulkanContext().device);
+			Application::AddCommandBuffer(m_CommandBuffer);
 		}
 
 		void OnDrawImGui() override

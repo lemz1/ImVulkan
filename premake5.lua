@@ -1,10 +1,6 @@
-include "ImVulkanLibraries.lua" -- libraries
-
-startprj = "ImVulkanApp"
-
 workspace "ImVulkan"
     architecture "x64"
-    startproject "%{startprj}"
+    startproject "ImVulkanApp"
     configurations { "Debug", "Release" }
 
     targetdir("%{wks.location}/bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/%{prj.name}")

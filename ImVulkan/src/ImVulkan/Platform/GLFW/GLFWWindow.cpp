@@ -55,10 +55,6 @@ namespace ImVulkan
 		}
 		
 		{
-			vkDestroySemaphore(device, m_Semaphore, nullptr);
-		}
-
-		{
 			vkDestroyRenderPass(device, m_RenderPass, nullptr);
 			m_Swapchain.Destroy(device);
 			vkDestroySurfaceKHR(instance, m_Surface, nullptr);
@@ -111,10 +107,6 @@ namespace ImVulkan
 					m_Swapchain.height
 				);
 			}
-		}
-
-		{
-			m_Semaphore = VulkanSemaphore::Create(device);
 		}
 
 		m_ImGuiContext = GLFWImGuiContext(
@@ -196,10 +188,13 @@ namespace ImVulkan
 	const bool GLFWWindow::AcquireNextImage(
 		VkPhysicalDevice physicalDevice,
 		VkDevice device,
-		uint32_t queueFamilyIndex
+		uint32_t queueFamilyIndex,
+		VkSemaphore signalSemaphore
 	)
 	{
-		if (m_Data.minimized)
+		// if you resize your window and make the height 0 it wont count as minimized 
+		// that's why here is also the check for width and height
+		if (m_Data.minimized || m_Data.width == 0 || m_Data.height == 0)
 		{
 			return false;
 		}
@@ -209,7 +204,7 @@ namespace ImVulkan
 				device,
 				m_Swapchain.swapchain,
 				UINT64_MAX, 
-				m_Semaphore,
+				signalSemaphore,
 				nullptr,
 				&m_ImageIndex
 			),
@@ -234,12 +229,12 @@ namespace ImVulkan
 	}
 
 	void GLFWWindow::SwapBuffers(
-		ImDrawData* imGuiDrawData,
 		VkPhysicalDevice physicalDevice,
 		VkDevice device,
 		uint32_t queueFamilyIndex,
 		VkQueue queue,
-		VkFence fence
+		VkFence fence,
+		VkSemaphore waitSemaphore
 	)
 	{
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
@@ -247,7 +242,7 @@ namespace ImVulkan
 		presentInfo.pSwapchains = &m_Swapchain.swapchain;
 		presentInfo.pImageIndices = &m_ImageIndex;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_Semaphore;
+		presentInfo.pWaitSemaphores = &waitSemaphore;
 		VK_ASSERT(
 			vkQueuePresentKHR(
 				queue,
@@ -436,6 +431,15 @@ namespace ImVulkan
 		uint32_t queueFamilyIndex
 	)
 	{
+		{ // if width or height is 0 return early
+			VkSurfaceCapabilitiesKHR surfaceCapabilites;
+			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &surfaceCapabilites);
+			if (surfaceCapabilites.currentExtent.width == 0 || surfaceCapabilites.currentExtent.height == 0)
+			{
+				return;
+			}
+		}
+		
 		VK_ASSERT(vkDeviceWaitIdle(device), "Could not wait for device idle!");
 
 		{

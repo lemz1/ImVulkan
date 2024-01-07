@@ -80,7 +80,8 @@ namespace ImVulkan
 		virtual const bool AcquireNextImage(
 			VkPhysicalDevice physicalDevice,
 			VkDevice device,
-			uint32_t queueFamilyIndex
+			uint32_t queueFamilyIndex,
+			VkSemaphore signalSemaphore
 		) = 0;
 
 
@@ -89,12 +90,12 @@ namespace ImVulkan
 
 		// swap buffers, etc.
 		virtual void SwapBuffers(
-			ImDrawData* imGuiDrawData,
 			VkPhysicalDevice physicalDevice,
 			VkDevice device,
 			uint32_t queueFamilyIndex,
 			VkQueue queue,
-			VkFence fence
+			VkFence fence,
+			VkSemaphore waitSemaphore
 		) = 0;
 
 		virtual void RecreateSwapchain(
@@ -114,7 +115,5 @@ namespace ImVulkan
 
 		virtual const VkRenderPass& GetRenderPass() const = 0;
 		virtual const VkFramebuffer& GetCurrentFrameBuffer() const = 0;
-
-		virtual const VkSemaphore& GetSemaphore() const = 0;
 	};
 }

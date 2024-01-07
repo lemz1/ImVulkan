@@ -2,6 +2,11 @@
 #include "ImVulkan/Core/Application.h"
 
 #include "ImVulkan/Util/Time.h"
+#include "ImVulkan/Vulkan/VulkanSemaphore.h"
+#include "ImVulkan/Vulkan/VulkanCommandPool.h"
+#include "ImVulkan/Vulkan/Buffer/VulkanCommandBuffer.h"
+
+#include "backends/imgui_impl_vulkan.h"
 
 namespace ImVulkan
 {
@@ -85,6 +90,10 @@ namespace ImVulkan
 				this
 			)
 		);
+
+		m_ImGuiCommandPool = VulkanCommandPool::Create(m_VulkanContext.device, m_VulkanContext.queueFamilyIndex);
+
+		m_ImGuiCommandBuffer = VulkanCommandBuffer::Create(m_VulkanContext.device, m_ImGuiCommandPool);
 		#else
 		m_VulkanContext = new VulkanContext(
 			0,
@@ -99,7 +108,17 @@ namespace ImVulkan
 
 	Application::~Application()
 	{
+		VK_ASSERT(vkDeviceWaitIdle(m_VulkanContext.device), "Could not wait for device idle!");
+
 		#ifndef IMVK_HEADLESS
+		vkDestroyCommandPool(m_VulkanContext.device, m_ImGuiCommandPool, nullptr);
+
+		for (VkSemaphore semaphore : m_Semaphores)
+		{
+			vkDestroySemaphore(m_VulkanContext.device, semaphore, nullptr);
+		}
+		m_Semaphores.clear();
+
 		m_Window->Destroy(m_VulkanContext.instance, m_VulkanContext.device);
 		delete m_Window;
 		#endif
@@ -136,13 +155,18 @@ namespace ImVulkan
 			m_LayerStack.OnUpdate(deltaTime);
 
 			#ifndef IMVK_HEADLESS
+
+			VkSemaphore imageSemaphore = VulkanSemaphore::Create(m_VulkanContext.device);
+
 			if (!m_Window->AcquireNextImage(
 					m_VulkanContext.physicalDevice, 
 					m_VulkanContext.device, 
-					m_VulkanContext.queueFamilyIndex
+					m_VulkanContext.queueFamilyIndex,
+					imageSemaphore
 				)
 			)
 			{
+				vkDestroySemaphore(m_VulkanContext.device, imageSemaphore, nullptr);
 				continue;
 			}
 
@@ -156,6 +180,13 @@ namespace ImVulkan
 				),
 				"Could not wait for fence!"
 			);
+
+			for (VkSemaphore semaphore : m_Semaphores)
+			{
+				vkDestroySemaphore(m_VulkanContext.device, semaphore, nullptr);
+			}
+			m_Semaphores.clear();
+			m_Semaphores.push_back(imageSemaphore);
 
 			VK_ASSERT(
 				vkResetFences(
@@ -172,15 +203,19 @@ namespace ImVulkan
 
 			m_LayerStack.OnDrawImGui();
 
-			ImDrawData* imGuiDrawData = m_Window->EndImGuiFrame();
+			ImDrawData* imguiDrawData = m_Window->EndImGuiFrame();
+
+			//ImGuiCommandBuffer(imguiDrawData);
+
+			SubmitCommandBuffers(m_VulkanContext.fence);
 
 			m_Window->SwapBuffers(
-				imGuiDrawData,
 				m_VulkanContext.physicalDevice,
 				m_VulkanContext.device,
 				m_VulkanContext.queueFamilyIndex,
 				m_VulkanContext.queue,
-				m_VulkanContext.fence
+				m_VulkanContext.fence,
+				m_Semaphores.at(m_Semaphores.size() - 1)
 			);
 			#endif
 		}
@@ -204,5 +239,121 @@ namespace ImVulkan
 			m_VulkanContext.queueFamilyIndex
 		);
 		#endif
+	}
+
+	void Application::AddCommandBuffer(VkCommandBuffer commandBuffer)
+	{
+		s_Instance->m_CommandBuffers.push_back(commandBuffer);
+
+		if (s_Instance->m_CommandBuffers.size() == NUM_CMDBUF_FOR_SUBMIT)
+		{
+			s_Instance->SubmitCommandBuffers(nullptr);
+		}
+	}
+
+	void Application::ImGuiCommandBuffer(ImDrawData* drawData)
+	{
+		VK_ASSERT(
+			vkResetCommandPool(
+				m_VulkanContext.device, 
+				m_ImGuiCommandPool, 
+				0
+			),
+			"Could not reset command pool!"
+		);
+
+		{
+			VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+			VK_ASSERT(
+				vkBeginCommandBuffer(
+					m_ImGuiCommandBuffer,
+					&beginInfo
+				),
+				"Could not begin command buffer!"
+			);
+		}
+
+		{
+			{
+				VkViewport viewport = { 0.f, 0.f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight() };
+				VkRect2D scissor = { {0, 0}, {m_Window->GetWidth(), m_Window->GetHeight()} };
+
+				vkCmdSetViewport(
+					m_ImGuiCommandBuffer,
+					0,
+					1,
+					&viewport
+				);
+
+				vkCmdSetScissor(
+					m_ImGuiCommandBuffer,
+					0,
+					1,
+					&scissor
+				);
+			}
+
+			{
+				VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+				beginInfo.renderPass = m_Window->GetRenderPass();
+				beginInfo.framebuffer = m_Window->GetCurrentFrameBuffer();
+				beginInfo.renderArea = { {0, 0}, {m_Window->GetWidth(), m_Window->GetHeight()} };
+
+				vkCmdBeginRenderPass(
+					m_ImGuiCommandBuffer,
+					&beginInfo,
+					VK_SUBPASS_CONTENTS_INLINE
+				);
+			}
+
+			{
+				ImGui_ImplVulkan_RenderDrawData(drawData, m_ImGuiCommandBuffer);
+			}
+
+			{
+				vkCmdEndRenderPass(m_ImGuiCommandBuffer);
+			}
+		}
+		
+		{
+			vkEndCommandBuffer(m_ImGuiCommandBuffer);
+		}
+
+		AddCommandBuffer(m_ImGuiCommandBuffer);
+	}
+
+	void Application::SubmitCommandBuffers(VkFence fence)
+	{
+		/*
+		if (m_CommandBuffers.size() == 0)
+		{
+			return;
+		}
+		*/
+
+		VkSemaphore signalSemaphore = VulkanSemaphore::Create(m_VulkanContext.device);
+		m_Semaphores.push_back(signalSemaphore);
+
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.commandBufferCount = s_Instance->m_CommandBuffers.size();
+		submitInfo.pCommandBuffers = s_Instance->m_CommandBuffers.data();
+		VkPipelineStageFlags waitMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		submitInfo.pWaitDstStageMask = &waitMask;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_Semaphores.at(m_Semaphores.size() - 2);
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &signalSemaphore;
+		VK_ASSERT(
+			vkQueueSubmit(
+				s_Instance->m_VulkanContext.queue,
+				1,
+				&submitInfo,
+				fence
+			),
+			"Could not submit queue"
+		);
+
+		m_CommandBuffers.clear();
 	}
 }
