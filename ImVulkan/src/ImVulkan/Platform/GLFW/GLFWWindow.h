@@ -7,17 +7,17 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "ImVulkan/Platform/Vulkan/VulkanContext.h"
-#include "ImVulkan/Platform/Vulkan/VulkanSwapchain.h"
-#include "ImVulkan/Platform/Vulkan/VulkanRenderPass.h"
-#include "ImVulkan/Platform/Vulkan/VulkanPipeline.h"
-#include "ImVulkan/Platform/Vulkan/VulkanSemaphore.h"
-#include "ImVulkan/Platform/Vulkan/VulkanFence.h"
-#include "ImVulkan/Platform/Vulkan/VulkanCommandPool.h"
-#include "ImVulkan/Platform/Vulkan/Buffer/VulkanBuffer.h"
-#include "ImVulkan/Platform/Vulkan/Buffer/VulkanFrameBuffer.h"
-#include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
-#include "ImVulkan/Platform/Vulkan/VulkanImage.h"
+#include "ImVulkan/Vulkan/VulkanContext.h"
+#include "ImVulkan/Vulkan/VulkanSwapchain.h"
+#include "ImVulkan/Vulkan/VulkanRenderPass.h"
+#include "ImVulkan/Vulkan/VulkanPipeline.h"
+#include "ImVulkan/Vulkan/VulkanSemaphore.h"
+#include "ImVulkan/Vulkan/VulkanFence.h"
+#include "ImVulkan/Vulkan/VulkanCommandPool.h"
+#include "ImVulkan/Vulkan/Buffer/VulkanBuffer.h"
+#include "ImVulkan/Vulkan/Buffer/VulkanFrameBuffer.h"
+#include "ImVulkan/Vulkan/Buffer/VulkanCommandBuffer.h"
+#include "ImVulkan/Vulkan/VulkanImage.h"
 #include "ImVulkan/Platform/GLFW/GLFWImGuiContext.h"
 
 namespace ImVulkan

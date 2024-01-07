@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImVulkan/Platform/Vulkan/VulkanCore.h"
+#include "ImVulkan/Vulkan/VulkanCore.h"
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>

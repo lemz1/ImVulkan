@@ -1,12 +1,12 @@
 #include "ImVulkan.h"
 
-#include "ImVulkan/Platform/Vulkan/Buffer/VulkanBuffer.h"
-#include "ImVulkan/Platform/Vulkan/Buffer/VulkanCommandBuffer.h"
-#include "ImVulkan/Platform/Vulkan/VulkanCommandPool.h"
-#include "ImVulkan/Platform/Vulkan/VulkanPipeline.h"
-#include "ImVulkan/Platform/Vulkan/Util/VulkanMemory.h"
-#include "ImVulkan/Platform/Vulkan/VulkanShaderModule.h"
-#include "ImVulkan/Platform/Vulkan/VulkanPipelineLayout.h"
+#include "ImVulkan/Vulkan/Buffer/VulkanBuffer.h"
+#include "ImVulkan/Vulkan/Buffer/VulkanCommandBuffer.h"
+#include "ImVulkan/Vulkan/VulkanCommandPool.h"
+#include "ImVulkan/Vulkan/VulkanPipeline.h"
+#include "ImVulkan/Vulkan/VulkanMemory.h"
+#include "ImVulkan/Vulkan/VulkanShaderModule.h"
+#include "ImVulkan/Vulkan/VulkanPipelineLayout.h"
 
 namespace ImVulkan
 {

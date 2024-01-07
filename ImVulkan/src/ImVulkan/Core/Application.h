@@ -2,7 +2,7 @@
 
 #include "ImVulkan/Core/Window.h"
 #include "ImVulkan/Core/LayerStack.h"
-#include "ImVulkan/Platform/Vulkan/VulkanContext.h"
+#include "ImVulkan/Vulkan/VulkanContext.h"
 
 namespace ImVulkan
 {
