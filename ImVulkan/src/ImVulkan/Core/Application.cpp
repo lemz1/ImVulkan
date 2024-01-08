@@ -205,7 +205,7 @@ namespace ImVulkan
 
 			ImDrawData* imguiDrawData = m_Window->EndImGuiFrame();
 
-			//ImGuiCommandBuffer(imguiDrawData);
+			ImGuiCommandBuffer(imguiDrawData);
 
 			SubmitCommandBuffers(m_VulkanContext.fence);
 
@@ -295,6 +295,34 @@ namespace ImVulkan
 			}
 
 			{
+				VkImageMemoryBarrier imageBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+				imageBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+				imageBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+				imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				imageBarrier.image = Application::GetWindow()->GetCurrentImage();
+
+				imageBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				imageBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				imageBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				imageBarrier.subresourceRange.baseArrayLayer = 0;
+				imageBarrier.subresourceRange.baseMipLevel = 0;
+				imageBarrier.subresourceRange.layerCount = 1;
+				imageBarrier.subresourceRange.levelCount = 1;
+
+				vkCmdPipelineBarrier(
+					m_ImGuiCommandBuffer,
+					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					0,
+					0,
+					nullptr,
+					0,
+					nullptr,
+					1,
+					&imageBarrier
+				);
+
 				VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 				beginInfo.renderPass = m_Window->GetRenderPass();
 				beginInfo.framebuffer = m_Window->GetCurrentFrameBuffer();

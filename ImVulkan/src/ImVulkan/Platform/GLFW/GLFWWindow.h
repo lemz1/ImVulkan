@@ -110,6 +110,7 @@ namespace ImVulkan
 		const VkSwapchainKHR& GetSwapchain() const override { return m_Swapchain.swapchain; }
 		const uint32_t& GetCurrentImageIndex() const override { return m_ImageIndex; }
 		const VkImage& GetCurrentImage() const override { return m_Swapchain.images[m_ImageIndex]; }
+		const VkImageLayout& GetCurrentImageLayout() const override { return m_Swapchain.imageLayouts[m_ImageIndex]; }
 		const VkImageView& GetCurrentImageView() const override { return m_Swapchain.imageViews[m_ImageIndex]; }
 
 		const VkRenderPass& GetRenderPass() const override { return m_RenderPass; }

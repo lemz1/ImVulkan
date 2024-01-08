@@ -1,6 +1,8 @@
 #include "imvkpch.h"
 #include "ImVulkan/Vulkan/VulkanSwapchain.h"
 
+#include "ImVulkan/Vulkan/VulkanImageView.h"
+
 namespace ImVulkan
 {
 	VulkanSwapchain::VulkanSwapchain(
@@ -98,24 +100,11 @@ namespace ImVulkan
 		);
 
 		imageViews.resize(numImages);
+		imageLayouts.resize(numImages);
 		for (uint32_t i = 0; i < numImages; i++)
 		{
-			VkImageViewCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-			createInfo.image = images[i];
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = format;
-			createInfo.components = {};
-			createInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-
-			VK_ASSERT(
-				vkCreateImageView(
-					device, 
-					&createInfo, 
-					nullptr, 
-					&imageViews[i]
-				), 
-				"Could not create image views"
-			);
+			imageViews[i] = VulkanImageView::Create(device, images[i], format);
+			imageLayouts[i] = VK_IMAGE_LAYOUT_UNDEFINED;
 		}
 	}
 

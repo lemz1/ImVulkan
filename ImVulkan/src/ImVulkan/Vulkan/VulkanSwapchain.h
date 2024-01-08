@@ -28,5 +28,6 @@ namespace ImVulkan
 		VkColorSpaceKHR colorSpace;
 		std::vector<VkImage> images;
 		std::vector<VkImageView> imageViews;
+		std::vector<VkImageLayout> imageLayouts;
 	};
 }

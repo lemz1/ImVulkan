@@ -250,6 +250,8 @@ namespace ImVulkan
 			),
 			"Could not present image!"
 		);
+
+		m_Swapchain.imageLayouts[m_ImageIndex] = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 	}
 
 	void GLFWWindow::InitEventCallbacks()

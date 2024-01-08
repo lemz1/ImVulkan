@@ -111,6 +111,7 @@ namespace ImVulkan
 		virtual const VkSwapchainKHR& GetSwapchain() const = 0;
 		virtual const uint32_t& GetCurrentImageIndex() const = 0;
 		virtual const VkImage& GetCurrentImage() const = 0;
+		virtual const VkImageLayout& GetCurrentImageLayout() const = 0;
 		virtual const VkImageView& GetCurrentImageView() const = 0;
 
 		virtual const VkRenderPass& GetRenderPass() const = 0;

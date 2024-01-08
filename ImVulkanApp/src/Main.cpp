@@ -249,18 +249,62 @@ namespace ImVulkan
 				}
 
 				{ // Begin RenderPass
-					VkClearValue clearValue = { .1f, .1f, .1f, 1.f };
+					VkImageMemoryBarrier imageBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+					imageBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+					imageBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+					imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					imageBarrier.image = Application::GetWindow()->GetCurrentImage();
+					imageBarrier.oldLayout = Application::GetWindow()->GetCurrentImageLayout();
+					imageBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+					imageBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					imageBarrier.subresourceRange.baseArrayLayer = 0;
+					imageBarrier.subresourceRange.baseMipLevel = 0;
+					imageBarrier.subresourceRange.layerCount = 1;
+					imageBarrier.subresourceRange.levelCount = 1;
+
+					vkCmdPipelineBarrier(
+						m_CommandBuffer,
+						VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+						VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+						0,
+						0,
+						nullptr,
+						0,
+						nullptr,
+						1,
+						&imageBarrier
+					);
+
 					VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 					beginInfo.renderPass = Application::GetWindow()->GetRenderPass();
 					beginInfo.framebuffer = Application::GetWindow()->GetCurrentFrameBuffer();
 					beginInfo.renderArea = { {0, 0}, {Application::GetWindow()->GetWidth(), Application::GetWindow()->GetHeight()} };
-					beginInfo.clearValueCount = 1;
-					beginInfo.pClearValues = &clearValue;
-
+					
 					vkCmdBeginRenderPass(
 						m_CommandBuffer,
 						&beginInfo,
 						VK_SUBPASS_CONTENTS_INLINE
+					);
+				}
+
+				{ // Clear 
+					VkClearAttachment clearAttachment = {};
+					clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					clearAttachment.clearValue.color = { .1f, .1f, .1f, 1.f };
+					clearAttachment.colorAttachment = 0; // Index of the color attachment
+
+					VkClearRect clearRect = {};
+					clearRect.rect = { {0, 0}, {Application::GetWindow()->GetWidth(), Application::GetWindow()->GetHeight()} };
+					clearRect.baseArrayLayer = 0;
+					clearRect.layerCount = 1;
+
+					vkCmdClearAttachments(
+						m_CommandBuffer,
+						1,
+						&clearAttachment,
+						1,
+						&clearRect
 					);
 				}
 
